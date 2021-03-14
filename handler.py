@@ -13,19 +13,18 @@ SEND_MESSAGE_URL = BASE_URL + "/sendMessage"
 
 def webhook(event, context):
     """
-    This is where we get an event once someone sends a message to the bot.
-    We ignore everything they've said and just reply with a generated text message
+    This is where we get an event once someone sends a message to the bot
     :param event:
     :param context:
     :return:
     """
     try:
         data = json.loads(event["body"])
-        message = str(data["message"]["text"])  # yes, ignore this
+        message = str(data["message"]["text"])
         chat_id = data["message"]["chat"]["id"]
         first_name = data["message"]["chat"]["first_name"]
 
-        response = '{}'.format(first_name)
+        response = '{}, {}'.format(first_name, message)
 
         data = {"text": response.encode("utf8"), "chat_id": chat_id}
         requests.post(SEND_MESSAGE_URL, data)
