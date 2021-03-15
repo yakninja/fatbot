@@ -28,6 +28,7 @@ provider:
   region: eu-west-1
   environment:
     TELEGRAM_TOKEN: ${env:TELEGRAM_TOKEN}
+    OWNER_CHAT_ID: ${env:OWNER_CHAT_ID}
 
 custom:
   pythonRequirements:

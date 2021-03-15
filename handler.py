@@ -7,6 +7,8 @@ import requests
 # sys.path.append(os.path.join(here, "./vendored"))
 
 TOKEN = os.environ['TELEGRAM_TOKEN']
+OWNER_CHAT_ID = os.environ['OWNER_CHAT_ID']
+
 BASE_URL = "https://api.telegram.org/bot{}".format(TOKEN)
 SEND_MESSAGE_URL = BASE_URL + "/sendMessage"
 
@@ -24,9 +26,12 @@ def webhook(event, context):
         chat_id = data["message"]["chat"]["id"]
         first_name = data["message"]["chat"]["first_name"]
 
-        response = '{}, {}'.format(first_name, message)
-
+        response = 'Принял: "{}"'.format(message)
         data = {"text": response.encode("utf8"), "chat_id": chat_id}
+        requests.post(SEND_MESSAGE_URL, data)
+
+        response = '{}'.format(message)
+        data = {"text": response.encode("utf8"), "chat_id": OWNER_CHAT_ID}
         requests.post(SEND_MESSAGE_URL, data)
 
     except Exception as e:
