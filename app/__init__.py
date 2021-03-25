@@ -3,16 +3,16 @@ import os
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from teleflask import Teleflask
-from teleflask.messages import TextMessage
 
 TOKEN = os.environ['TELEGRAM_TOKEN']
+URI = "/{}".format(TOKEN.replace(':', '-'))
 OWNER_CHAT_ID = os.environ['OWNER_CHAT_ID']
+BASE_URL = "https://api.telegram.org/bot{}".format(TOKEN)
+SEND_MESSAGE_URL = BASE_URL + "/sendMessage"
 
 app = Flask(__name__)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-bot = Teleflask(TOKEN, app)
 
 
 @app.route('/', methods=['GET'])
@@ -20,10 +20,6 @@ def hello_world():
     return "index"
 
 
-# Register the /start command
-@bot.command("start")
-def start(update, text):
-    # update is the update object. It is of type pytgbot.api_types.receivable.updates.Update
-    # text is the text after the command. Can be empty. Type is str.
-    return TextMessage("<b>Hello!</b> Thanks for using @" + bot.username + "!",
-                       parse_mode="html")
+@app.route(URI, methods=['GET'])
+def hello_world():
+    return "index"
