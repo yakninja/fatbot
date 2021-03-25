@@ -12,7 +12,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-TOKEN = os.environ['TELEGRAM_TOKEN']
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 OWNER_CHAT_ID = os.environ['OWNER_CHAT_ID']
 
 
@@ -37,7 +37,7 @@ def echo(update: Update, _: CallbackContext) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(TOKEN)
+    updater = Updater(TELEGRAM_TOKEN)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
