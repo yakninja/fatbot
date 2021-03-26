@@ -1,0 +1,16 @@
+version: '3.2'
+
+services:
+  mysql:
+    ports:
+      - 3306:3306
+    image: library/mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=fatbot
+      - MYSQL_USER=fatbot
+      - MYSQL_PASSWORD=fatbot
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    volumes:
+      # Mount source code for development
+      - ./:/app
