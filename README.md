@@ -1,6 +1,6 @@
 # fatbot
 
-## Deploy
+## Install
 
 - `pip install virtualenv`
 - `cd /path/to/project`  

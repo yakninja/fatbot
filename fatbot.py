@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import os
 import logging
+import os
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -29,6 +29,7 @@ def help_command(update: Update, _: CallbackContext) -> None:
 
 
 def echo(update: Update, _: CallbackContext) -> None:
+    print(update.message.from_user)
     _.bot.send_message(OWNER_CHAT_ID, update.message.text)
     """Echo the user message."""
     update.message.reply_text('Принял: {}'.format(update.message.text))
