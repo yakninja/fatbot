@@ -1,11 +1,19 @@
-from __future__ import with_statement
-
 import logging
+import os
 from logging.config import fileConfig
 
-from flask import current_app
-
 from alembic import context
+from sqlalchemy import create_engine
+
+
+def get_db_url():
+    return "mysql://%s:%s@%s/%s" % (
+        os.getenv("DB_USER", "fatbot"),
+        os.getenv("DB_PASSWORD", "fatbot"),
+        os.getenv("DB_HOST", "localhost"),
+        os.getenv("DB_NAME", "fatbot"),
+    )
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,21 +22,21 @@ config = context.config
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
-logger = logging.getLogger('alembic.env')
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-config.set_main_option(
-    'sqlalchemy.url',
-    str(current_app.extensions['migrate'].db.engine.url).replace('%', '%%'))
-target_metadata = current_app.extensions['migrate'].db.metadata
+target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+log_level = os.environ.get('LOG_LEVEL', 'INFO')
+logging.root.setLevel(logging.getLevelName(log_level))
+_logger = logging.getLogger(__name__)
 
 
 def run_migrations_offline():
@@ -43,9 +51,12 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_db_url()
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -59,26 +70,12 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-
-    # this callback is used to prevent an auto-migration from being generated
-    # when there are no changes to the schema
-    # reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
-    def process_revision_directives(context, revision, directives):
-        if getattr(config.cmd_opts, 'autogenerate', False):
-            script = directives[0]
-            if script.upgrade_ops.is_empty():
-                directives[:] = []
-                logger.info('No changes in schema detected.')
-
-    connectable = current_app.extensions['migrate'].db.engine
-
+    connectable = create_engine(get_db_url())
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            process_revision_directives=process_revision_directives,
-            **current_app.extensions['migrate'].configure_args
-        )
+            include_schemas=True)
 
         with context.begin_transaction():
             context.run_migrations()

@@ -1,0 +1,9 @@
+"Received: %{message}": "Принял: %{message}"
+Hi!: Привет!
+I don't understand: "Не понимаю"
+The food was not found, forwarding request to the owner: Не нашел еду, подождите немного, я уточню
+Food recorded: Еда записана
+"Calories: %{calories} / %{calories_left}": "Калории: %{calories} / %{calories_left}"
+"Fat: %{fat} / %{fat_left}": "Жиры: %{fat} / %{fat_left}"
+"Carbs: %{carbs} / %{carbs_left}": "Углеводы: %{carbs} / %{carbs_left}"
+"Protein: %{protein} / %{protein_left}": "Белки: %{protein} / %{protein_left}"
