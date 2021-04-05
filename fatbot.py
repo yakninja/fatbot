@@ -168,6 +168,7 @@ def send_food_log(bot, food_log: FoodLog):
     message = "\n".join(lines)
     bot.send_message(food_log.user.telegram_id, message)
     bot.send_message(OWNER_USER_ID, message)
+    logger.info(message)
 
 
 def log_food(user: User, food: Food, qty: float) -> FoodLog:
