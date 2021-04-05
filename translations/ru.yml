@@ -7,3 +7,12 @@ Food recorded: Еда записана
 "Fat: %{fat} / %{fat_left}": "Жиры: %{fat} / %{fat_left}"
 "Carbs: %{carbs} / %{carbs_left}": "Углеводы: %{carbs} / %{carbs_left}"
 "Protein: %{protein} / %{protein_left}": "Белки: %{protein} / %{protein_left}"
+Please add new food: Пожалуйста, добавьте еду
+"How to use:": "Как мной пользоваться:"
+Apple 1: Яблоко 1
+Oatmeal 100 g: Овсянка 100 г
+Chicken soup 1 bowl: Куриный суп 1 миска
+/day - show today stats: /day - статистика за сегодня
+/settings - show your settings: /settings - показать мои настройки
+or: или
+No entries today: Сегодня не было записей

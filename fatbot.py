@@ -15,8 +15,11 @@ from models.food import Food
 from models.food_log import FoodLog
 from models.food_name import FoodName
 from models.food_request import FoodRequest
-from models.user import User
+from models.user import User, get_or_create_user
 from models.user_profile import UserProfile
+from db import db_session
+
+from commands import *
 
 # Enable logging
 logging.basicConfig(
@@ -30,9 +33,6 @@ i18n.set('skip_locale_root_data', True)
 i18n.set('locale', 'ru')
 i18n.set('fallback', 'en')
 
-db_engine = create_engine(get_db_url())
-db_session = sessionmaker(bind=db_engine)()
-
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 OWNER_USER_ID = os.environ['OWNER_USER_ID']
 
@@ -40,14 +40,6 @@ OWNER_USER_ID = os.environ['OWNER_USER_ID']
 def start_command(update: Update, _: CallbackContext) -> None:
     """Greet the user on /start"""
     update.message.reply_text(i18n.t('Hi!'))
-
-
-def help_command(update: Update, _: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    help_strings = [
-        i18n.t('Usage:'),
-    ]
-    update.message.reply_text("\n".join(help_strings))
 
 
 # Oatmeal 100 g
@@ -60,20 +52,7 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
     logger.info(info)
     _.bot.send_message(OWNER_USER_ID, info)
 
-    telegram_id = update.message.from_user.id
-    user = db_session.query(User).filter_by(telegram_id=telegram_id).first()
-    if not user:
-        user = User(telegram_id=telegram_id)
-        db_session.add(user)
-        db_session.commit()
-        # TODO: configure calories etc. See https://www.calculator.net/macro-calculator.html
-        profile = UserProfile(user_id=user.id,
-                              daily_calories=1538,
-                              daily_carbs=205,
-                              daily_fat=44,
-                              daily_protein=94)
-        db_session.add(profile)
-        db_session.commit()
+    user = get_or_create_user(update.message.from_user.id)
 
     # parse food entry
     m = FOOD_ENTRY_PATTERN.match(update.message.text)
@@ -92,7 +71,9 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         db_session.commit()
         lines = [
             i18n.t('Please add new food'),
-            '/add "{}" "g" gunit:100 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id)
+            '/add "{}" "g" gunit:1 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id),
+            i18n.t('or'),
+            '/add "{}" "pc" gunit:100 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id),
         ]
         _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
         update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
@@ -204,6 +185,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start_command))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("add", add_command))
+    dispatcher.add_handler(CommandHandler("day", day_command))
 
     # default command: food entry
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, food_entry_command))

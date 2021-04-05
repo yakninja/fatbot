@@ -1,5 +1,8 @@
 import os
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 
 def get_db_url():
     return "mysql://%s:%s@%s/%s?charset=utf8mb4" % (
@@ -8,3 +11,7 @@ def get_db_url():
         os.getenv("DB_HOST", "localhost"),
         os.getenv("DB_NAME", "fatbot"),
     )
+
+
+db_engine = create_engine(get_db_url())
+db_session = sessionmaker(bind=db_engine)()
