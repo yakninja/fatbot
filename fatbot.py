@@ -165,7 +165,9 @@ def send_food_log(bot, food_log: FoodLog):
         i18n.t('Carbs: %{carbs} / %{carbs_left}', carbs=food_log.carbs, carbs_left=carbs_left),
         i18n.t('Protein: %{protein} / %{protein_left}', protein=food_log.protein, protein_left=protein_left),
     ]
-    bot.send_message(food_log.user.telegram_id, "\n".join(lines))
+    message = "\n".join(lines)
+    bot.send_message(food_log.user.telegram_id, message)
+    bot.send_message(OWNER_USER_ID, message)
 
 
 def log_food(user: User, food: Food, qty: float) -> FoodLog:
