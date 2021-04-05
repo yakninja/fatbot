@@ -50,7 +50,9 @@ def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("\n".join(help_strings))
 
 
-FOOD_ENTRY_PATTERN = re.compile("^(.+?)\s+([0-9.,]+)?(\s+.+)?\s*$")  # Oatmeal 100 g
+# Oatmeal 100 g
+# Apple 1
+FOOD_ENTRY_PATTERN = re.compile("^(.+?)\s+([0-9.,]+)?(\s+.+)?\s*$")
 
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
@@ -90,7 +92,7 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         db_session.commit()
         lines = [
             i18n.t('Please add new food'),
-            '/add "{}" cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id)
+            '/add "{}" "g" gunit:100 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id)
         ]
         _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
         update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
@@ -101,7 +103,7 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
 
 
 ADD_COMMAND_PATTERN = re.compile(
-    '^/add\s*"(.+?)"\s+cal:([0-9.]+)\s+carb:([0-9.]+)\s+fat:([0-9.]+)\s+prot:([0-9.]+)(\s+req:([0-9]+))?\s*$'
+    '^/add\s*"(.+?)"\s+"(.+?)"\s+gunit:([0-9.]+)\s+cal:([0-9.]+)\s+carb:([0-9.]+)\s+fat:([0-9.]+)\s+prot:([0-9.]+)(\s+req:([0-9]+))?\s*$'
 )
 
 
@@ -116,12 +118,16 @@ def add_command(update: Update, _: CallbackContext) -> None:
         update.message.reply_text(i18n.t('Invalid command format'))
         return
     name = m.groups()[0].strip()
-    calories = float(m.groups()[1])
-    carbs = float(m.groups()[2])
-    fat = float(m.groups()[3])
-    protein = float(m.groups()[4])
-    request_id = int(m.groups()[6])
-    food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein)
+    default_unit = m.groups()[1].strip()
+    g_per_unit = float(m.groups()[2].strip())
+    calories = float(m.groups()[3])
+    carbs = float(m.groups()[4])
+    fat = float(m.groups()[5])
+    protein = float(m.groups()[6])
+    request_id = int(m.groups()[8])
+
+    food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein,
+                default_unit=default_unit, g_per_unit=g_per_unit)
     db_session.add(food)
     db_session.commit()
     food_name = FoodName(food_id=food.id, name=name, language=i18n.get('locale'))
@@ -163,7 +169,15 @@ def send_food_log(bot, food_log: FoodLog):
 
 
 def log_food(user: User, food: Food, qty: float) -> FoodLog:
-    multiplier = qty / 100
+    """
+    Oatmeal 50 = Oatmeal 100 g * (1 (g_per_unit) * 50 / 100)
+    Apple 1 = Apple 100 g * (182 (g_per_unit) * 1 / 100)
+    :param user:
+    :param food:
+    :param qty:
+    :return:
+    """
+    multiplier = qty * food.g_per_unit / 100
     food_log = FoodLog(user_id=user.id, food_id=food.id, qty="{:.2f}".format(qty),
                        calories="{:.2f}".format(food.calories * multiplier),
                        carbs="{:.2f}".format(food.carbs * multiplier),
