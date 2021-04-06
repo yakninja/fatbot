@@ -10,6 +10,19 @@ services:
       - MYSQL_DATABASE=fatbot
       - MYSQL_USER=fatbot
       - MYSQL_PASSWORD=fatbot
+    command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci' ]
+    volumes:
+      # Mount source code for development
+      - ./:/app
+  mysqltest:
+    ports:
+      - 3307:3306
+    image: library/mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=fatbot
+      - MYSQL_USER=fatbot
+      - MYSQL_PASSWORD=fatbot
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     volumes:
       # Mount source code for development
