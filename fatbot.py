@@ -105,7 +105,7 @@ def add_command(update: Update, _: CallbackContext) -> None:
     carbs = float(m.groups()[4])
     fat = float(m.groups()[5])
     protein = float(m.groups()[6])
-    request_id = int(m.groups()[8])
+    request_id = int(m.groups()[8]) if 8 in m.groups() else None
 
     food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein,
                 default_unit=default_unit, g_per_unit=g_per_unit)
