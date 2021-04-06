@@ -37,3 +37,24 @@ class FoodLog(Base):
 
     def __repr__(self):
         return "<FoodLog(user_id={}, food_id={})>".format(self.user_id, self.food_id)
+
+
+def log_food(user: User, food: Food, qty: float) -> FoodLog:
+    """
+    Oatmeal 50 = Oatmeal 100 g * (1 (g_per_unit) * 50 / 100)
+    Apple 1 = Apple 100 g * (182 (g_per_unit) * 1 / 100)
+    :param user:
+    :param food:
+    :param qty:
+    :return:
+    """
+    multiplier = qty * food.g_per_unit / 100
+    food_log = FoodLog(user_id=user.id, food_id=food.id, qty="{:.2f}".format(qty),
+                       calories="{:.2f}".format(food.calories * multiplier),
+                       carbs="{:.2f}".format(food.carbs * multiplier),
+                       fat="{:.2f}".format(food.fat * multiplier),
+                       protein="{:.2f}".format(food.protein * multiplier)
+                       )
+    db_session.add(food_log)
+    db_session.commit()
+    return food_log
