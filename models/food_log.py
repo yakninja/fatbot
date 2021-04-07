@@ -6,6 +6,7 @@ from sqlalchemy.orm import validates, relationship, backref
 from pytz import timezone
 from datetime import datetime
 
+from db import db_session
 from models import Base
 from models.food import Food
 from models.user import User
