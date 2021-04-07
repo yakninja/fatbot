@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 ADD_COMMAND_PATTERN = re.compile(
     '^/add\s*"(.+?)"\s+"(.+?)"\s+' +
-    'gunit:([0-9.]+)\s+'+
-    'cal:([0-9.]+)\s+'+
-    'carb:([0-9.]+)\s+'+
-    'fat:([0-9.]+)\s+'+
-    'prot:([0-9.]+)'+
+    'gunit:([0-9.]+)\s+' +
+    'cal:([0-9.]+)\s+' +
+    'carb:([0-9.]+)\s+' +
+    'fat:([0-9.]+)\s+' +
+    'prot:([0-9.]+)' +
     '(\s+req:([0-9]+))?\s*$'
 )
 
@@ -47,7 +47,10 @@ def add_command(update: Update, _: CallbackContext) -> None:
     carbs = float(m.groups()[4])
     fat = float(m.groups()[5])
     protein = float(m.groups()[6])
-    request_id = int(m.groups()[8]) if 8 in m.groups() else None
+    try:
+        request_id = int(m.groups()[8])
+    except:
+        request_id = None
 
     food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein,
                 default_unit=default_unit, g_per_unit=g_per_unit)
