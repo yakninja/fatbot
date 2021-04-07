@@ -62,8 +62,12 @@ def add_command(update: Update, _: CallbackContext) -> None:
     _.bot.send_message(OWNER_USER_ID, i18n.t('Food added'))
 
     if request_id:
+        logger.info('Request id: {}'.format(request_id))
         food_request = db_session.query(FoodRequest).filter_by(id=request_id).first()
         if not food_request:
+            logger.info('Request not found')
             return
         food_log = log_food(food_request.user, food, food_request.qty)
         send_food_log(_.bot, food_log)
+    else:
+        logger.info('Request id not set')
