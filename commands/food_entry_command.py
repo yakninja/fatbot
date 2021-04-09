@@ -12,6 +12,7 @@ from db import db_session
 from models.food_log import log_food
 from models.food_name import FoodName
 from models.food_request import FoodRequest
+from models.unit_name import UnitName
 from models.user import get_or_create_user
 from util import send_food_log
 
@@ -36,20 +37,45 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         return
 
     name = m.groups()[0].strip()
-    qty = float(m.groups()[1].strip().replace(',', '.'))
-    if qty == 0:
-        qty = 100  # default
+    try:
+        qty = float(m.groups()[1].strip().replace(',', '.'))
+        if qty == 0:
+            qty = 1  # default
+    except (IndexError, AttributeError):
+        qty = 1
+
+    try:
+        unit_name = m.groups()[2].strip()
+    except (IndexError, AttributeError):
+        unit_name = None
+
     food_name = db_session.query(FoodName).filter_by(name=name).first()
     if not food_name:
         food_request = FoodRequest(user_id=user.id, qty=qty, request=update.message.text)
         db_session.add(food_request)
         db_session.commit()
+        n = db_session.query(UnitName).filter_by(
+            name='g', language='en').first()
+        gram_unit_name = db_session.query(UnitName).filter_by(
+            unit_id=n.unit_id, language=i18n.get('locale')).first().name
+        n = db_session.query(UnitName).filter_by(
+            name='pc', language='en').first()
+        pc_unit_name = db_session.query(UnitName).filter_by(
+            unit_id=n.unit_id, language=i18n.get('locale')).first().name
+
         lines = [
             i18n.t('Please add new food'),
-            '/add "{}" "g" gunit:1 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id),
+            '/add "{}" "{}" grams:1 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+                name, gram_unit_name, food_request.id),
             i18n.t('or'),
-            '/add "{}" "pc" gunit:100 cal:0.0 carb:0.0 fat:0.0 prot:0.0 req:{}'.format(name, food_request.id),
+            '/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+                name, pc_unit_name, food_request.id),
         ]
+        if unit_name is not None and unit_name != gram_unit_name and unit_name != pc_unit_name:
+            lines.append(i18n.t('or'))
+            lines.append('/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+                name, unit_name, food_request.id))
+
         _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
         update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
         return

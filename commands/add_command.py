@@ -18,12 +18,13 @@ from util import send_food_log
 logger = logging.getLogger(__name__)
 
 ADD_COMMAND_PATTERN = re.compile(
-    '^/add\s*"(.+?)"\s+"(.+?)"\s+' +
-    'gunit:([0-9.]+)\s+' +
+    '^/add\s*"(.+?)"\s+'+
+    '"(.+?)"\s+' +
+    'grams:([0-9.]+)\s+' +
     'cal:([0-9.]+)\s+' +
     'carb:([0-9.]+)\s+' +
     'fat:([0-9.]+)\s+' +
-    'prot:([0-9.]+)' +
+    'protein:([0-9.]+)' +
     '(\s+req:([0-9]+))?\s*$'
 )
 
@@ -41,15 +42,15 @@ def add_command(update: Update, _: CallbackContext) -> None:
         update.message.reply_text(i18n.t('Invalid command format'))
         return
     name = m.groups()[0].strip()
-    default_unit = m.groups()[1].strip()
-    g_per_unit = float(m.groups()[2].strip())
+    unit_name = m.groups()[1].strip()
+    grams = float(m.groups()[2].strip())
     calories = float(m.groups()[3])
     carbs = float(m.groups()[4])
     fat = float(m.groups()[5])
     protein = float(m.groups()[6])
     try:
         request_id = int(m.groups()[8])
-    except:
+    except IndexError:
         request_id = None
 
     food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein,
