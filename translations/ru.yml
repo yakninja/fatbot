@@ -1,7 +1,7 @@
 "Received: %{message}": "Принял: %{message}"
 Hi!: Привет!
 I don't understand: "Не понимаю"
-The food was not found, forwarding request to the owner: Не нашел еду, подождите немного, я уточню
+The food was not found, forwarding request to the owner: Новый продукт будет подсчитан и добавлен через некоторое время
 Food recorded: Еда записана
 "Calories: %{calories} / %{calories_left}": "Калории: %{calories} / %{calories_left}"
 "Fat: %{fat} / %{fat_left}": "Жиры: %{fat} / %{fat_left}"
