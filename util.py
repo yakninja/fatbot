@@ -46,7 +46,7 @@ def send_food_log(bot, food_log: FoodLog):
 
     lines = [
         i18n.t('Food recorded: %{name} %{qty} %{unit}',
-               name=food_name, qty=food_log.qty, unit=unit_name),
+               name=food_name, qty=round(food_log.qty), unit=unit_name),
         i18n.t('Calories: %{calories} / %{calories_left}', calories=food_log.calories, calories_left=calories_left),
         i18n.t('Fat: %{fat} / %{fat_left}', fat=food_log.fat, fat_left=fat_left),
         i18n.t('Carbs: %{carbs} / %{carbs_left}', carbs=food_log.carbs, carbs_left=carbs_left),
