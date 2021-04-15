@@ -2,7 +2,7 @@
 Hi!: Привет!
 I don't understand: "Не понимаю"
 The food was not found, forwarding request to the owner: Новый продукт будет определен и добавлен через некоторое время
-Food recorded: Еда записана
+"Food recorded: %{name} %{qty} %{unit}": "Еда записана: %{name} %{qty} %{unit}"
 "Calories: %{calories} / %{calories_left}": "Калории: %{calories} / %{calories_left}"
 "Fat: %{fat} / %{fat_left}": "Жиры: %{fat} / %{fat_left}"
 "Carbs: %{carbs} / %{carbs_left}": "Углеводы: %{carbs} / %{carbs_left}"

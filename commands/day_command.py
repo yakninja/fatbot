@@ -6,6 +6,7 @@ from datetime import datetime
 from models.food_log import FoodLog, date_now
 from db import db_session
 from models.food_name import FoodName
+from models.unit_name import UnitName
 from models.user import get_or_create_user
 
 
@@ -34,11 +35,17 @@ def day_command(update: Update, _: CallbackContext) -> None:
     protein_left = profile.daily_protein
     for fl in food_logs:
         food = fl.food
-        food_name = db_session.query(FoodName).filter_by(food_id=food.id).first()
+        food_name = db_session.query(FoodName).filter_by(
+            food_id=food.id, language=i18n.get('locale')).first()
         name = food_name.name if food_name else '?'
-        strings.append('{}\t{}\t{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
+        unit = fl.unit
+        unit_name = db_session.query(UnitName).filter_by(
+            unit_id=unit.id, language=i18n.get('locale')).first()
+        strings.append('{}\t{} {:.0f} {}\t{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
             datetime.utcfromtimestamp(fl.created_at).strftime('%H:%M'),
             name,
+            fl.qty,
+            unit_name.name if unit_name else '?',
             fl.calories,
             fl.fat,
             fl.carbs,

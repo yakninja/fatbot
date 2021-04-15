@@ -20,12 +20,6 @@ depends_on = None
 
 
 def upgrade():
-    # op.drop_constraint('fk-food_log-unit', 'food_log', type_='foreignkey')
-    # op.drop_column('food_log', 'unit_id')
-    # op.drop_table('food_unit')
-    # op.drop_table('unit_name')
-    # op.drop_table('unit')
-
     op.create_table(
         'unit',
         sa.Column('id', sa.Integer, primary_key=True)

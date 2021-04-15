@@ -12,6 +12,7 @@ from db import db_session
 from models.food_log import log_food
 from models.food_name import FoodName
 from models.food_request import FoodRequest
+from models.food_unit import FoodUnit
 from models.unit_name import UnitName
 from models.user import get_or_create_user
 from util import send_food_log
@@ -45,13 +46,14 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         qty = 1
 
     try:
-        unit_name = m.groups()[2].strip()
+        unit_name_str = m.groups()[2].strip()
     except (IndexError, AttributeError):
-        unit_name = None
+        unit_name_str = None
 
     food_name = db_session.query(FoodName).filter_by(name=name).first()
     if not food_name:
-        food_request = FoodRequest(user_id=user.id, qty=qty, request=update.message.text)
+        food_request = FoodRequest(user_id=user.id, qty=qty,
+                                   request=update.message.text)
         db_session.add(food_request)
         db_session.commit()
         n = db_session.query(UnitName).filter_by(
@@ -71,14 +73,26 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
             '/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
                 name, pc_unit_name, food_request.id),
         ]
-        if unit_name is not None and unit_name != gram_unit_name and unit_name != pc_unit_name:
+        if unit_name_str is not None and unit_name_str != gram_unit_name and unit_name_str != pc_unit_name:
             lines.append(i18n.t('or'))
             lines.append('/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                name, unit_name, food_request.id))
+                name, unit_name_str, food_request.id))
 
         _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
         update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
         return
 
-    food_log = log_food(user, food_name.food, qty)
+    unit_name = None
+    if unit_name_str:
+        unit_name = db_session.query(UnitName).filter_by(
+            name=unit_name_str, language=i18n.get('locale')).first()
+
+    if not unit_name:
+        default_food_unit = db_session.query(FoodUnit).filter_by(
+            food_id=food_name.food.id, is_default=True).first()
+        unit = default_food_unit.unit
+    else:
+        unit = unit_name.unit
+
+    food_log = log_food(user, food_name.food, unit, qty)
     send_food_log(_.bot, food_log)

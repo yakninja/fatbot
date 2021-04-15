@@ -6,6 +6,8 @@ from sqlalchemy import func
 
 from db import db_session
 from models.food_log import FoodLog
+from models.food_name import FoodName
+from models.unit_name import UnitName
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
@@ -33,8 +35,18 @@ def send_food_log(bot, food_log: FoodLog):
     carbs_left = "{:.2f}".format(max(0, user_profile.daily_carbs - query['carbs']))
     protein_left = "{:.2f}".format(max(0, user_profile.daily_protein - query['protein']))
 
+    food = food_log.food
+    fn = db_session.query(FoodName).filter_by(
+        food_id=food.id, language=i18n.get('locale')).first()
+    food_name = fn.name if fn else '?'
+    unit = food_log.unit
+    un = db_session.query(UnitName).filter_by(
+        unit_id=unit.id, language=i18n.get('locale')).first()
+    unit_name = un.name if un else '?'
+
     lines = [
-        i18n.t('Food recorded'),
+        i18n.t('Food recorded: %{name} %{qty} %{unit}',
+               name=food_name, qty=food_log.qty, unit=unit_name),
         i18n.t('Calories: %{calories} / %{calories_left}', calories=food_log.calories, calories_left=calories_left),
         i18n.t('Fat: %{fat} / %{fat_left}', fat=food_log.fat, fat_left=fat_left),
         i18n.t('Carbs: %{carbs} / %{carbs_left}', carbs=food_log.carbs, carbs_left=carbs_left),
