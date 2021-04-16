@@ -41,7 +41,7 @@ def day_command(update: Update, _: CallbackContext) -> None:
         unit = fl.unit
         unit_name = db_session.query(UnitName).filter_by(
             unit_id=unit.id, language=i18n.get('locale')).first()
-        strings.append('{}\t{} {:.0f} {}\t{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
+        strings.append('{}\t{} {:.1f} {}\t{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
             datetime.utcfromtimestamp(fl.created_at).strftime('%H:%M'),
             name,
             fl.qty,
