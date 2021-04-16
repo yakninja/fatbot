@@ -3,19 +3,14 @@ import os
 import re
 
 import i18n
+from sqlalchemy.orm import sessionmaker
 from telegram import Update
 from telegram.ext import CallbackContext
 
-# Oatmeal 100 g
-# Apple 1
-from db import db_session
-from models.food_log import log_food
-from models.food_name import FoodName
-from models.food_request import FoodRequest
-from models.food_unit import FoodUnit
-from models.unit_name import UnitName
-from models.user import get_or_create_user
-from util import send_food_log
+from db import db_engine
+from models import FoodName, UnitName, FoodRequest, FoodUnit
+from models.core import get_or_create_user, log_food
+from utils import send_food_log
 
 FOOD_ENTRY_PATTERN = re.compile("^(.+?)\s+([0-9.,]+)?(\s+.+)?\s*$")
 
@@ -25,11 +20,12 @@ OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
+    db_session = sessionmaker(bind=db_engine)()
     info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
     logger.info(info)
     _.bot.send_message(OWNER_USER_ID, info)
 
-    user = get_or_create_user(update.message.from_user.id)
+    user = get_or_create_user(db_session, update.message.from_user.id)
 
     # parse food entry
     m = FOOD_ENTRY_PATTERN.match(update.message.text)
@@ -94,5 +90,5 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
     else:
         unit = unit_name.unit
 
-    food_log = log_food(user, food_name.food, unit, qty)
-    send_food_log(_.bot, food_log)
+    food_log = log_food(db_session, user, food_name.food, unit, qty)
+    send_food_log(db_session, _.bot, food_log)

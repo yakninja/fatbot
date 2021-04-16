@@ -33,7 +33,7 @@ def upgrade():
     )
     op.create_foreign_key(
         'fk-unit_name-unit',
-        'unit_name', 'food',
+        'unit_name', 'unit',
         ['unit_id'], ['id'],
         onupdate='restrict',
         ondelete='cascade'

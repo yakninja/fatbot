@@ -4,19 +4,17 @@ import os
 import i18n
 from sqlalchemy import func
 
-from db import db_session
-from models.food_log import FoodLog
-from models.food_name import FoodName
-from models.unit_name import UnitName
+from models import FoodLog, FoodName, UnitName
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
 logger = logging.getLogger(__name__)
 
 
-def send_food_log(bot, food_log: FoodLog):
+def send_food_log(db_session, bot, food_log: FoodLog):
     """
     Send a message to food log user about this food log entry
+    :param db_session:
     :param bot:
     :param food_log:
     :return:

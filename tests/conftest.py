@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from db import get_db_url
+from models import User, FoodName, Food
 
 
 @pytest.fixture(scope='module')
@@ -22,3 +23,15 @@ def db_session(db_credentials):
     session = sessionmaker(bind=engine)()
     yield session
 
+
+@pytest.fixture(scope='function')
+def no_users(db_session):
+    db_session.query(User).delete()
+    db_session.commit()
+
+
+@pytest.fixture(scope='function')
+def no_food(db_session):
+    db_session.query(FoodName).delete()
+    db_session.query(Food).delete()
+    db_session.commit()

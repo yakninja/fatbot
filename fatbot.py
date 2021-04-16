@@ -10,15 +10,6 @@ from sqlalchemy.orm import sessionmaker
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-from db import get_db_url
-from models.food import Food
-from models.food_log import FoodLog
-from models.food_name import FoodName
-from models.food_request import FoodRequest
-from models.user import User, get_or_create_user
-from models.user_profile import UserProfile
-from db import db_session
-
 from commands import *
 
 logger = logging.getLogger(__name__)
