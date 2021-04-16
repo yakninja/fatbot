@@ -67,10 +67,10 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
 
         lines = [
             i18n.t('Please add new food'),
-            '/add "{}" "{}" grams:1 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+            '/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
                 name, gram_unit_name, food_request.id),
             i18n.t('or'),
-            '/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+            '/add "{}" "{}" grams:123 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
                 name, pc_unit_name, food_request.id),
         ]
         if unit_name_str is not None and unit_name_str != gram_unit_name and unit_name_str != pc_unit_name:

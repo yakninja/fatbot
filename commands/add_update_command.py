@@ -20,8 +20,9 @@ from util import send_food_log
 
 logger = logging.getLogger(__name__)
 
-ADD_COMMAND_PATTERN = re.compile(
-    '^/add\s*"(.+?)"\s+' +
+ADD_UPDATE_COMMAND_PATTERN = re.compile(
+    '^/(add|update)\s*' +
+    '"(.+?)"\s+' +
     '"(.+?)"\s+' +
     'grams:([0-9.]+)\s+' +
     'cal:([0-9.]+)\s+' +
@@ -34,19 +35,34 @@ ADD_COMMAND_PATTERN = re.compile(
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
 
-def add_command(update: Update, _: CallbackContext) -> None:
+def add_update_command(update: Update, _: CallbackContext) -> None:
     info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
     logger.info(info)
     if str(update.message.from_user.id) != str(OWNER_USER_ID):
         logger.info('Invalid sender: {} != {}'.format(update.message.from_user.id, OWNER_USER_ID))
         return
-    m = ADD_COMMAND_PATTERN.match(update.message.text)
+    m = ADD_UPDATE_COMMAND_PATTERN.match(update.message.text)
     if not m:
         update.message.reply_text(i18n.t('Invalid command format'))
         return
-    name = m.groups()[0].strip()
-    unit_name_str = m.groups()[1].strip()
-    grams = float(m.groups()[2].strip())
+
+    command = m.groups()[0].strip()
+    food_name_str = m.groups()[1].strip()
+
+    food = None
+    if command == 'update':
+        food_name = db_session.query(FoodName).filter_by(
+            name=food_name_str, language=i18n.get('locale')).first()
+        if not food_name:
+            update.message.reply_text(i18n.t('Food not found'))
+            return
+        food = food_name.food
+
+    unit_name_str = m.groups()[2].strip()
+    grams = float(m.groups()[3].strip())
+    if grams == 0:
+        update.message.reply_text(i18n.t('Invalid weight'))
+        return
 
     unit_name = db_session.query(UnitName).filter_by(
         name=unit_name_str, language=i18n.get('locale')).first()
@@ -63,27 +79,36 @@ def add_command(update: Update, _: CallbackContext) -> None:
     else:
         unit = unit_name.unit
 
-    calories = float(m.groups()[3])
-    carbs = float(m.groups()[4])
-    fat = float(m.groups()[5])
-    protein = float(m.groups()[6])
+    calories = float(m.groups()[4]) / grams
+    carbs = float(m.groups()[5]) / grams
+    fat = float(m.groups()[6]) / grams
+    protein = float(m.groups()[7]) / grams
     try:
-        request_id = int(m.groups()[8])
+        request_id = int(m.groups()[9])
     except IndexError:
         request_id = None
 
-    food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein,
-                default_unit="g", g_per_unit=1  # deprecated, remove
-                )
-    db_session.add(food)
-    db_session.commit()
-    food_name = FoodName(food_id=food.id, name=name, language=i18n.get('locale'))
-    db_session.add(food_name)
-    db_session.commit()
-    food_unit = FoodUnit(food_id=food.id, unit_id=unit.id,
-                         is_default=True, grams=grams)
-    db_session.add(food_unit)
-    db_session.commit()
+    if command == 'add':
+        food = Food(calories=calories, carbs=carbs, fat=fat, protein=protein)
+        db_session.add(food)
+        db_session.commit()
+        food_name = FoodName(food_id=food.id, name=food_name_str, language=i18n.get('locale'))
+        db_session.add(food_name)
+        db_session.commit()
+
+    db_session.execute("""UPDATE food_unit SET is_default = 0
+        WHERE food_id = :food_id""", {'food_id': food.id})
+    food_unit = db_session.query(FoodUnit).filter_by(
+        food_id=food.id, unit_id=unit.id).first()
+    if not food_unit:
+        food_unit = FoodUnit(food_id=food.id, unit_id=unit.id,
+                             is_default=True, grams=grams)
+        db_session.add(food_unit)
+        db_session.commit()
+    else:
+        db_session.execute("""UPDATE food_unit SET is_default = 1
+            WHERE food_id = :food_id AND unit_id = :unit_id""",
+                           {'food_id': food.id, 'unit_id': unit.id})
 
     if unit.id != gram_unit_name.unit_id:
         # also add in grams

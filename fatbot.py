@@ -53,7 +53,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start_command))
     dispatcher.add_handler(CommandHandler("settings", settings_command))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("add", add_command))
+    dispatcher.add_handler(CommandHandler("add", add_update_command))
+    dispatcher.add_handler(CommandHandler("update", add_update_command))
     dispatcher.add_handler(CommandHandler("day", day_command))
 
     # default command: food entry

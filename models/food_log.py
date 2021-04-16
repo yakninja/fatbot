@@ -53,7 +53,7 @@ def log_food(user: User, food: Food, unit: Unit, qty: float) -> FoodLog:
     """
     food_unit = db_session.query(FoodUnit).filter_by(food_id=food.id,
                                                      unit_id=unit.id).first()
-    multiplier = qty * food_unit.grams / 100
+    multiplier = qty * food_unit.grams
     food_log = FoodLog(user_id=user.id, food_id=food.id,
                        unit_id=unit.id, qty="{:.2f}".format(qty),
                        calories="{:.2f}".format(food.calories * multiplier),
