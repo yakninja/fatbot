@@ -3,13 +3,15 @@ import os
 import re
 
 import i18n
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from db import db_engine
+from exc import FoodNotFound
 from models import FoodName, UnitName, FoodRequest, FoodUnit
-from models.core import get_or_create_user, log_food
+from models.core import get_or_create_user, log_food, get_food_by_name
 from utils import send_food_log
 
 FOOD_ENTRY_PATTERN = re.compile("^(.+?)\s+([0-9.,]+)?(\s+.+)?\s*$")
@@ -33,20 +35,28 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         update.message.reply_text(i18n.t('I don\'t understand'))
         return
 
-    name = m.groups()[0].strip()
+    food_name = m.groups()[0].strip()
+    if not food_name:
+        update.message.reply_text(i18n.t('I don\'t understand'))
+        return
+
     try:
-        qty = float(m.groups()[1].strip().replace(',', '.'))
-        if qty == 0:
-            qty = 1  # default
+        qty = max(1.0, float(m.groups()[1].strip().replace(',', '.')))
     except (IndexError, AttributeError):
         qty = 1
 
     try:
-        unit_name_str = m.groups()[2].strip()
+        unit_name = m.groups()[2].strip()
     except (IndexError, AttributeError):
-        unit_name_str = None
+        unit_name = None
 
-    food_name = db_session.query(FoodName).filter_by(name=name).first()
+    try:
+        log_food(db_session, i18n.get('locale'), user,
+                 food_name, unit_name, qty)
+    except FoodNotFound:
+        pass
+
+    food_name = db_session.query(FoodName).filter_by(name=food_name_str).first()
     if not food_name:
         food_request = FoodRequest(user_id=user.id, qty=qty,
                                    request=update.message.text)
@@ -63,16 +73,16 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
 
         lines = [
             i18n.t('Please add new food'),
-            '/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                name, gram_unit_name, food_request.id),
+            '/add "{}" "{}" grams:1 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
+                food_name_str, gram_unit_name, food_request.id),
             i18n.t('or'),
             '/add "{}" "{}" grams:123 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                name, pc_unit_name, food_request.id),
+                food_name_str, pc_unit_name, food_request.id),
         ]
         if unit_name_str is not None and unit_name_str != gram_unit_name and unit_name_str != pc_unit_name:
             lines.append(i18n.t('or'))
             lines.append('/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                name, unit_name_str, food_request.id))
+                food_name_str, unit_name_str, food_request.id))
 
         _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
         update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
