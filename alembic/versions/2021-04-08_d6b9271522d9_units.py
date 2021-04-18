@@ -7,11 +7,14 @@ Create Date: 2021-04-08 15:53:37.106825
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.orm import Session
 from sqlalchemy.sql import insert, text
 from sqlalchemy import orm, String, Integer, Boolean, Float
 
 # revision identifiers, used by Alembic.
 from sqlalchemy import table, column
+
+from models.core import create_default_units
 
 revision = 'd6b9271522d9'
 down_revision = 'c4a77577129f'
@@ -40,47 +43,6 @@ def upgrade():
     )
     op.create_unique_constraint('uq-unit_name', 'unit_name',
                                 ['unit_id', 'name', 'language'])
-    unit = table('unit')
-    unit_name = table(
-        'unit_name',
-        column('unit_id', Integer),
-        column('name', String),
-        column('language', String),
-    )
-    session = orm.Session(bind=op.get_bind())
-    units = [
-        {
-            'ru': ['г', 'грамм', 'гр', 'грам', 'граммов'],
-            'en': ['g', 'gram', 'gr', 'grams'],
-        },
-        {
-            'ru': ['шт', 'штук', 'штука'],
-            'en': ['pc', 'pcs'],
-        }
-    ]
-    gram_unit_id = None
-    pc_unit_id = None
-    for u in units:
-        unit_id = session.execute(
-            insert(unit).values()
-        ).lastrowid
-
-        if gram_unit_id is None:
-            gram_unit_id = unit_id
-        else:
-            pc_unit_id = unit_id
-
-        for lang in u.keys():
-            for name in u[lang]:
-                session.execute(
-                    insert(unit_name).values(
-                        {
-                            'unit_id': unit_id,
-                            'name': name,
-                            'language': lang
-                        }
-                    )
-                )
 
     op.create_table(
         'food_unit',
@@ -119,6 +81,9 @@ def upgrade():
         column('is_default', Boolean),
         column('grams', Float)
     )
+    session = orm.Session(bind=op.get_bind())
+    gram_unit_id, pc_unit_id = create_default_units(session=session)
+
     for f in session.execute('SELECT * FROM food'):
         session.execute(
             insert(food_unit).values(

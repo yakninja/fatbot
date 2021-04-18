@@ -5,7 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from db import get_db_url
-from models import User, FoodName, Food
+from models import User, FoodName, Food, UnitName, Unit
+from models.core import create_default_units
 
 
 @pytest.fixture(scope='module')
@@ -35,3 +36,12 @@ def no_food(db_session):
     db_session.query(FoodName).delete()
     db_session.query(Food).delete()
     db_session.commit()
+
+
+@pytest.fixture(scope='function')
+def default_units(db_session):
+    db_session.query(UnitName).delete()
+    db_session.query(Unit).delete()
+    db_session.commit()
+
+    gram_unit_id, pc_unit_id = create_default_units(session=db_session)
