@@ -5,6 +5,8 @@ Revises: c4a77577129f
 Create Date: 2021-04-08 15:53:37.106825
 
 """
+import sys
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
@@ -14,6 +16,7 @@ from sqlalchemy import orm, String, Integer, Boolean, Float
 # revision identifiers, used by Alembic.
 from sqlalchemy import table, column
 
+sys.path = ['', '..'] + sys.path[1:]
 from models.core import create_default_units
 
 revision = 'd6b9271522d9'

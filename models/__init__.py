@@ -74,7 +74,6 @@ class FoodRequest(Base):
     id = Column(Integer(), primary_key=True, unique=True, nullable=False)
     user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
     created_at = Column(Integer(), default=time.time, nullable=False)
-    qty = Column(Float(), nullable=False)
     request = Column(String(255), nullable=False)
 
     user = relationship('User', foreign_keys=user_id)

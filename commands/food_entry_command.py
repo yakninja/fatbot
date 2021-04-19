@@ -64,7 +64,7 @@ def food_entry(user_telegram_id: int, input_message: str) -> (str, str):
     try:
         food_log = log_food(db_session, i18n.get('locale'), user, food_name, unit_name, qty)
     except (FoodNotFound, UnitNotFound, UnitNotDefined):
-        food_log_request =
+        food_request = FoodRequest(user_id=user.id, request=input_message)
         return i18n.t('The food was not found, forwarding request to the owner'), i18n.t('Please add new food')
 
 

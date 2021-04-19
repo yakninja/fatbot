@@ -1,10 +1,10 @@
 import logging
 import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import create_engine
-
 
 def get_db_url():
     return "mysql://%s:%s@%s:%s/%s?charset=utf8mb4" % (
