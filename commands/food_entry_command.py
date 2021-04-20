@@ -4,7 +4,7 @@ import re
 
 import i18n
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -48,8 +48,9 @@ def parse_food_entry(entry: str) -> (str, float, str):
     return food_name, qty, unit_name
 
 
-def food_entry(user_telegram_id: int, input_message: str) -> (str, str):
+def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -> (str, str):
     """
+    :param db_session:
     :param user_telegram_id:
     :param input_message:
     :return:
@@ -58,27 +59,54 @@ def food_entry(user_telegram_id: int, input_message: str) -> (str, str):
     if food_name is None:
         return i18n.t('I don\'t understand'), None
 
-    db_session = sessionmaker(bind=db_engine)()
     user = get_or_create_user(db_session, user_telegram_id)
 
     try:
         food_log = log_food(db_session, i18n.get('locale'), user, food_name, unit_name, qty)
-    except (FoodNotFound, UnitNotFound, UnitNotDefined):
+    except FoodNotFound:
         food_request = FoodRequest(user_id=user.id, request=input_message)
-        return i18n.t('The food was not found, forwarding request to the owner'), i18n.t('Please add new food')
+        db_session.add(food_request)
+        db_session.commit()
+        owner_message = [
+            i18n.t('Please add new food (values per 100 g)'),
+            '/add_food "{}" calories:0.0 fat:0.0 carbs:0.0 protein:0.0 {}'.format(
+                food_name, food_request.id),
+        ]
+        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
+    except UnitNotFound:
+        food_request = FoodRequest(user_id=user.id, request=input_message)
+        db_session.add(food_request)
+        db_session.commit()
+        owner_message = [
+            i18n.t('Please add and define new unit'),
+            '/add_unit "{}"'.format(unit_name),
+            '/define_unit "{}" food:{} grams:100 {}'.format(
+                unit_name, food_request.food_id, food_request.id),
+        ]
+        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
+    except UnitNotDefined:
+        food_request = FoodRequest(user_id=user.id, request=input_message)
+        db_session.add(food_request)
+        db_session.commit()
+        owner_message = [
+            i18n.t('Please define unit for this food'),
+            '/define_unit "{}" "{}" grams:100 default:true {}'.format(
+                food_name, unit_name, food_request.id),
+        ]
+        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
 
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
     info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
     logger.info(info)
     _.bot.send_message(OWNER_USER_ID, info)
-    user_message, owner_message = food_entry(update.message.from_user.id, update.message.text)
+    db_session = sessionmaker(bind=db_engine)()
+    user_message, owner_message = food_entry(db_session, update.message.from_user.id, update.message.text)
     _.bot.send_message(OWNER_USER_ID, owner_message)
 
     send_food_log(db_session, _.bot, food_log)
 
     db_session = sessionmaker(bind=db_engine)()
-
 
     try:
         log_food(db_session, i18n.get('locale'), user,

@@ -38,7 +38,7 @@ def test_parse_food_entry():
 def test_invalid_command(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         assert db_session.query(User).count() == 0
-        user_message, owner_message = food_entry(12345, '')
+        user_message, owner_message = food_entry(db_session, 12345, '')
         assert user_message == i18n.t('I don\'t understand')
 
 
@@ -58,7 +58,7 @@ def test_non_existing_food(db_session, no_users, no_food, default_units):
         ]
         request_count = 0
         for entry in data:
-            user_message, owner_message = food_entry(12345, entry)
+            user_message, owner_message = food_entry(db_session, 12345, entry)
             assert user_message == user_reply
             assert owner_reply in owner_message
             request_count += 1
