@@ -23,7 +23,7 @@ FOOD_ENTRY_PATTERN = re.compile('^(.+?)(\\s+([0-9.,]+)(\\s?[^%]+)?)?\\s*$')
 def parse_food_entry(entry: str) -> (str, float, str):
     """
     :param entry:
-    :return:
+    :return: food_name, qty, unit_name
     """
     m = FOOD_ENTRY_PATTERN.match(entry)
     if not m:
@@ -55,7 +55,7 @@ def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -
     :param input_message:
     :return:
     """
-    food_name, unit_name, qty = parse_food_entry(input_message)
+    food_name, qty, unit_name = parse_food_entry(input_message)
     if food_name is None:
         return i18n.t('I don\'t understand'), None
 
@@ -80,8 +80,8 @@ def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -
         owner_message = [
             i18n.t('Please add and define new unit'),
             '/add_unit "{}"'.format(unit_name),
-            '/define_unit "{}" food:{} grams:100 {}'.format(
-                unit_name, food_request.food_id, food_request.id),
+            '/define_unit "{}" "{}" grams:100 {}'.format(
+                food_name, unit_name, food_request.id),
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
     except UnitNotDefined:
@@ -95,6 +95,7 @@ def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
 
+    return i18n.t('Food added'), i18n.t('Food added')
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
     info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
