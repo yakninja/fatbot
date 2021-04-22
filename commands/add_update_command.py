@@ -10,7 +10,6 @@ from telegram.ext import CallbackContext
 from db import db_engine
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest
 from models.core import log_food
-from utils import send_food_log
 
 logger = logging.getLogger(__name__)
 

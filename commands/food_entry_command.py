@@ -11,8 +11,7 @@ from telegram.ext import CallbackContext
 from db import db_engine
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
 from models import FoodName, UnitName, FoodRequest, FoodUnit
-from models.core import get_or_create_user, log_food, get_food_by_name
-from utils import send_food_log
+from models.core import get_or_create_user, log_food, get_food_by_name, food_log_message
 
 logger = logging.getLogger(__name__)
 
@@ -95,68 +94,20 @@ def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
 
-    return i18n.t('Food added'), i18n.t('Food added')
+    message_lines = [
+        i18n.t('Food added'),
+        food_log_message(db_session, food_log),
+    ]
+    message = '\n'.join(message_lines)
+    return message, message
+
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
-    info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
+    db_session = sessionmaker(bind=db_engine)()
+    from_user = update.message.from_user
+    info = "{} {}: {}".format(from_user.id, from_user.username, update.message.text)
     logger.info(info)
     _.bot.send_message(OWNER_USER_ID, info)
-    db_session = sessionmaker(bind=db_engine)()
-    user_message, owner_message = food_entry(db_session, update.message.from_user.id, update.message.text)
+    user_message, owner_message = food_entry(db_session, from_user.id, update.message.text)
     _.bot.send_message(OWNER_USER_ID, owner_message)
-
-    send_food_log(db_session, _.bot, food_log)
-
-    db_session = sessionmaker(bind=db_engine)()
-
-    try:
-        log_food(db_session, i18n.get('locale'), user,
-                 food_name, unit_name, qty)
-    except (FoodNotFound, UnitNotFound, UnitNotDefined):
-        pass
-
-    food_name = db_session.query(FoodName).filter_by(name=food_name_str).first()
-    if not food_name:
-        food_request = FoodRequest(user_id=user.id, qty=qty,
-                                   request=update.message.text)
-        db_session.add(food_request)
-        db_session.commit()
-        n = db_session.query(UnitName).filter_by(
-            name='g', language='en').first()
-        gram_unit_name = db_session.query(UnitName).filter_by(
-            unit_id=n.unit_id, language=i18n.get('locale')).first().name
-        n = db_session.query(UnitName).filter_by(
-            name='pc', language='en').first()
-        pc_unit_name = db_session.query(UnitName).filter_by(
-            unit_id=n.unit_id, language=i18n.get('locale')).first().name
-
-        lines = [
-            i18n.t('Please add new food'),
-            '/add "{}" "{}" grams:1 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                food_name_str, gram_unit_name, food_request.id),
-            i18n.t('or'),
-            '/add "{}" "{}" grams:123 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                food_name_str, pc_unit_name, food_request.id),
-        ]
-        if unit_name_str is not None and unit_name_str != gram_unit_name and unit_name_str != pc_unit_name:
-            lines.append(i18n.t('or'))
-            lines.append('/add "{}" "{}" grams:100 cal:0.0 carb:0.0 fat:0.0 protein:0.0 req:{}'.format(
-                food_name_str, unit_name_str, food_request.id))
-
-        _.bot.send_message(OWNER_USER_ID, "\n".join(lines))
-        update.message.reply_text(i18n.t('The food was not found, forwarding request to the owner'))
-        return
-
-    unit_name = None
-    if unit_name_str:
-        unit_name = db_session.query(UnitName).filter_by(
-            name=unit_name_str, language=i18n.get('locale')).first()
-
-    if not unit_name:
-        default_food_unit = db_session.query(FoodUnit).filter_by(
-            food_id=food_name.food.id, is_default=True).first()
-        unit = default_food_unit.unit
-    else:
-        unit = unit_name.unit
-
-    food_log = log_food(db_session, user, food_name.food, unit, qty)
+    _.bot.send_message(from_user.id, user_message)

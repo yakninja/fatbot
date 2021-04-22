@@ -1,4 +1,5 @@
-from sqlalchemy import table, column, Integer, String, insert
+import i18n
+from sqlalchemy import table, column, Integer, String, insert, func
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session
 
@@ -72,7 +73,7 @@ def get_food_by_name(db_session: Session, locale: str, name: str) -> Food:
     :param name:
     :return:
     """
-    return db_session.query(FoodName).filter_by(language=locale, name=name).one().food
+    return db_session.query(FoodName).filter_by(language=locale, name=name).first().food
 
 
 def get_or_create_user(db_session: Session, telegram_id) -> User:
@@ -227,3 +228,61 @@ def create_food(db_session: Session, locale: str, name: str,
     db_session.add(fn)
     db_session.commit()
     return f
+
+
+def get_food_name(db_session: Session, food: Food) -> str:
+    """
+    Return default name for food
+    :param db_session:
+    :param food:
+    :return:
+    """
+    fn = db_session.query(FoodName).filter_by(
+        food_id=food.id, language=i18n.get('locale')).first()
+    return fn.name if fn else None
+
+
+def get_unit_name(db_session: Session, unit: Unit) -> str:
+    """
+    Return default name for unit
+    :param db_session:
+    :param unit:
+    :return:
+    """
+    un = db_session.query(UnitName).filter_by(
+        unit_id=unit.id, language=i18n.get('locale')).first()
+    return un.name if un else None
+
+
+def food_log_message(db_session: Session, food_log: FoodLog) -> str:
+    """
+    :param db_session:
+    :param food_log:
+    :return:
+    """
+    user_profile = food_log.user.profile
+    query = db_session.query(
+        FoodLog.date,
+        func.sum(FoodLog.calories).label('calories'),
+        func.sum(FoodLog.carbs).label('carbs'),
+        func.sum(FoodLog.fat).label('fat'),
+        func.sum(FoodLog.protein).label('protein')
+    ).filter_by(user_id=food_log.user_id, date=food_log.date).first()
+
+    calories_left = "{:.2f}".format(max(0, user_profile.daily_calories - query['calories']))
+    fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query['fat']))
+    carbs_left = "{:.2f}".format(max(0, user_profile.daily_carbs - query['carbs']))
+    protein_left = "{:.2f}".format(max(0, user_profile.daily_protein - query['protein']))
+
+    food_name = get_food_name(db_session, food_log.food)
+    unit_name = get_unit_name(db_session, food_log.unit)
+
+    lines = [
+        i18n.t('Food recorded: %{name} %{qty} %{unit}',
+               name=food_name, qty='{:.1f}'.format(food_log.qty), unit=unit_name),
+        i18n.t('Calories: %{calories} / %{calories_left}', calories=food_log.calories, calories_left=calories_left),
+        i18n.t('Fat: %{fat} / %{fat_left}', fat=food_log.fat, fat_left=fat_left),
+        i18n.t('Carbs: %{carbs} / %{carbs_left}', carbs=food_log.carbs, carbs_left=carbs_left),
+        i18n.t('Protein: %{protein} / %{protein_left}', protein=food_log.protein, protein_left=protein_left),
+    ]
+    return "\n".join(lines)
