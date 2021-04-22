@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
-from commands.food_entry_command import food_entry, parse_food_entry
+from commands.food_entry_command import food_entry, parse_food_entry_message
 from models import Food, FoodName, FoodLog, date_now, FoodUnit, User, FoodRequest
 from models.core import create_food, create_unit, define_unit_for_food, get_food_by_name, get_or_create_user, \
     get_gram_unit
@@ -35,7 +35,7 @@ def test_parse_food_entry():
         (' Fresh bread   1  slice ', 'Fresh bread', 1.0, 'slice'),
     ]
     for entry, food_name, unit_name, qty in data:
-        assert (food_name, unit_name, qty) == parse_food_entry(entry)
+        assert (food_name, unit_name, qty) == parse_food_entry_message(entry)
 
 
 def test_invalid_command(db_session, no_users, no_food, default_units):

@@ -3,29 +3,44 @@ import os
 import re
 
 import i18n
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from db import db_engine
-from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest
+from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
 from models.core import log_food
 
 logger = logging.getLogger(__name__)
 
-ADD_UPDATE_COMMAND_PATTERN = re.compile(
-    '^/(add|update)\\s*' +
-    '"(.+?)"\\s+' +
-    '"(.+?)"\\s+' +
-    'grams:([0-9.]+)\\s+' +
-    'cal:([0-9.]+)\\s+' +
-    'carb:([0-9.]+)\\s+' +
-    'fat:([0-9.]+)\\s+' +
-    'protein:([0-9.]+)' +
-    '(\\s+req:([0-9]+))?\\s*$'
+ADD_FOOD_COMMAND_PATTERN = re.compile(
+    '^/add_food\\s*' +
+    '"(.+?)"' +
+    '(\\s+(calories|carbs|fat|protein|req):([0-9.]+))+$'
 )
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
+
+def parse_add_food_message(message: str) ->dict:
+    """
+    Parses command message
+    :param message:
+    :return: dictionary with food values and optionally food request id (see regex pattern)
+    """
+
+def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
+    """
+    :param db_session:
+    :param user:
+    :param input_message:
+    :return: user_message, owner_message
+    """
+    m = ADD_FOOD_COMMAND_PATTERN.match(input_message)
+    if not m:
+        return i18n.t('Invalid command format'), None
+
+    if str(user.id) != str(OWNER_USER_ID):
+        return i18n.t('Invalid user id'), None
 
 
 def add_update_command(update: Update, _: CallbackContext) -> None:
