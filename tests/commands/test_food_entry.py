@@ -41,7 +41,8 @@ def test_parse_food_entry():
 def test_invalid_command(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         assert db_session.query(User).count() == 0
-        user_message, owner_message = food_entry(db_session, 12345, '')
+        user = get_or_create_user(db_session, 12345)
+        user_message, owner_message = food_entry(db_session, user, '')
         assert user_message == i18n.t('I don\'t understand')
 
 
@@ -56,8 +57,9 @@ def test_non_existing_food(db_session, no_users, no_food, default_units):
             'Pineapple 100 g',
         ]
         request_count = 0
+        user = get_or_create_user(db_session, 12345)
         for entry in data:
-            user_message, owner_message = food_entry(db_session, 12345, entry)
+            user_message, owner_message = food_entry(db_session, user, entry)
             assert user_message == user_reply
             assert owner_reply in owner_message
             request_count += 1
@@ -73,7 +75,8 @@ def test_non_existing_unit(db_session, no_users, no_food, default_units):
         owner_reply = i18n.t('Please add and define new unit')
         create_food(db_session, i18n.get('locale'), 'Chicken soup',
                     0.36, 0.012, 0.035, 0.025)
-        user_message, owner_message = food_entry(db_session, 12345,
+        user = get_or_create_user(db_session, 12345)
+        user_message, owner_message = food_entry(db_session, user,
                                                  'Chicken soup 1 bowl')
         assert user_message == user_reply
         assert owner_reply in owner_message
@@ -89,7 +92,8 @@ def test_undefined_unit(db_session, no_users, no_food, default_units):
         create_food(db_session, i18n.get('locale'), 'Chicken soup',
                     0.36, 0.012, 0.035, 0.025)
         create_unit(db_session, i18n.get('locale'), 'bowl')
-        user_message, owner_message = food_entry(db_session, 12345,
+        user = get_or_create_user(db_session, 12345)
+        user_message, owner_message = food_entry(db_session, user,
                                                  'Chicken soup 1 bowl')
         assert user_message == user_reply
         assert owner_reply in owner_message
@@ -104,7 +108,8 @@ def test_success(db_session, no_users, no_food, default_units):
                            0.36, 0.012, 0.035, 0.025)
         unit = create_unit(db_session, i18n.get('locale'), 'bowl')
         define_unit_for_food(db_session, food, unit, 350, False)
-        user_message, owner_message = food_entry(db_session, 12345,
+        user = get_or_create_user(db_session, 12345)
+        user_message, owner_message = food_entry(db_session, user,
                                                  'Chicken soup 1 bowl')
         assert i18n.t('Food added') in user_message
         assert i18n.t('Food added') in owner_message
@@ -123,7 +128,7 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.carbs == 12.25
         assert food_log.protein == 8.75
 
-        user_message, owner_message = food_entry(db_session, 12345,
+        user_message, owner_message = food_entry(db_session, user,
                                                  'Chicken soup 150 g')
         assert i18n.t('Food added') in user_message
         assert i18n.t('Food added') in owner_message

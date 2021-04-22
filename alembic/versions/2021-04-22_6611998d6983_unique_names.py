@@ -23,8 +23,12 @@ def upgrade():
     op.drop_constraint('uq-food_name', 'food_name', type_='unique')
     op.drop_constraint('uq-unit_name', 'unit_name', type_='unique')
 
-    # delete duplicate names
     session = orm.Session(bind=op.get_bind())
+
+    # otherwise we risk getting "You can't specify target table for update in FROM clause"
+    session.execute("SET optimizer_switch = 'derived_merge=off'")
+
+    # delete duplicate names
     session.execute("""DELETE FROM food_name fn
     WHERE fn.id NOT IN(SELECT * FROM(SELECT max(id) FROM food_name fn2
         WHERE fn2.name = fn.name AND fn2.language = fn2.language) x)""")

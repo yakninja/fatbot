@@ -3,15 +3,14 @@ import os
 import re
 
 import i18n
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from db import db_engine
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
-from models import FoodName, UnitName, FoodRequest, FoodUnit
-from models.core import get_or_create_user, log_food, get_food_by_name, food_log_message
+from models import FoodRequest, User
+from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
 
@@ -47,18 +46,16 @@ def parse_food_entry(entry: str) -> (str, float, str):
     return food_name, qty, unit_name
 
 
-def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -> (str, str):
+def food_entry(db_session: Session, user: User, input_message: str) -> (str, str):
     """
     :param db_session:
-    :param user_telegram_id:
+    :param user:
     :param input_message:
     :return:
     """
     food_name, qty, unit_name = parse_food_entry(input_message)
     if food_name is None:
         return i18n.t('I don\'t understand'), None
-
-    user = get_or_create_user(db_session, user_telegram_id)
 
     try:
         food_log = log_food(db_session, i18n.get('locale'), user, food_name, unit_name, qty)
@@ -103,11 +100,18 @@ def food_entry(db_session: Session, user_telegram_id: int, input_message: str) -
 
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
+    """
+    Process food entry, echo it to the owner for debugging
+    :param update:
+    :param _:
+    :return:
+    """
     db_session = sessionmaker(bind=db_engine)()
     from_user = update.message.from_user
     info = "{} {}: {}".format(from_user.id, from_user.username, update.message.text)
     logger.info(info)
     _.bot.send_message(OWNER_USER_ID, info)
-    user_message, owner_message = food_entry(db_session, from_user.id, update.message.text)
+    user = get_or_create_user(db_session, from_user.id)
+    user_message, owner_message = food_entry(db_session, user, update.message.text)
     _.bot.send_message(OWNER_USER_ID, owner_message)
     _.bot.send_message(from_user.id, user_message)
