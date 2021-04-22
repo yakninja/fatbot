@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from db import get_db_url
 from models import User, FoodName, Food, UnitName, Unit, FoodRequest
-from models.core import create_default_units
+from models.core import create_default_units, get_or_create_user
 
 
 @pytest.fixture(scope='module')
@@ -29,6 +29,14 @@ def db_session(db_credentials):
 def no_users(db_session):
     db_session.query(User).delete()
     db_session.commit()
+
+
+@pytest.fixture(scope='function')
+def owner_user(db_session):
+    os.environ['OWNER_USER_ID'] = '111222333'
+    db_session.query(User).delete()
+    db_session.commit()
+    get_or_create_user(db_session, telegram_id=os.environ['OWNER_USER_ID'])
 
 
 @pytest.fixture(scope='function')

@@ -73,12 +73,11 @@ def get_food_by_name(db_session: Session, locale: str, name: str) -> Food:
     :param name:
     :return:
     """
-    return db_session.query(FoodName).filter_by(language=locale, name=name).first().food
+    return db_session.query(FoodName).filter_by(language=locale, name=name).one().food
 
 
 def get_or_create_user(db_session: Session, telegram_id) -> User:
     """
-
     :param db_session:
     :param telegram_id:
     :return:

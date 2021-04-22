@@ -14,15 +14,15 @@ from models.core import log_food
 logger = logging.getLogger(__name__)
 
 ADD_UPDATE_COMMAND_PATTERN = re.compile(
-    '^/(add|update)\s*' +
-    '"(.+?)"\s+' +
-    '"(.+?)"\s+' +
-    'grams:([0-9.]+)\s+' +
-    'cal:([0-9.]+)\s+' +
-    'carb:([0-9.]+)\s+' +
-    'fat:([0-9.]+)\s+' +
+    '^/(add|update)\\s*' +
+    '"(.+?)"\\s+' +
+    '"(.+?)"\\s+' +
+    'grams:([0-9.]+)\\s+' +
+    'cal:([0-9.]+)\\s+' +
+    'carb:([0-9.]+)\\s+' +
+    'fat:([0-9.]+)\\s+' +
     'protein:([0-9.]+)' +
-    '(\s+req:([0-9]+))?\s*$'
+    '(\\s+req:([0-9]+))?\\s*$'
 )
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
