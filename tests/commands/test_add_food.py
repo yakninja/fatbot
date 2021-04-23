@@ -18,10 +18,25 @@ def do_test_setup(db_session, owner_user, no_food, default_units):
     yield
 
 
-def test_parse_command(db_session, no_food, default_units):
-    with do_test_setup(db_session, no_food, default_units):
+def test_parse_command(db_session, owner_user, no_food, default_units):
+    with do_test_setup(db_session, owner_user, no_food, default_units):
         data = [
+            (
+                '/add_food "Chicken soup" calories:36 fat:1.2 carbs:3.5 protein:2.5',
+                {
+                    'name': 'Chicken soup',
+                    'calories': 36.0,
+                    'fat': 1.2,
+                    'carbs': 3.5,
+                    'protein': 2.5,
+                    'req': None,
+                }
+            ),
         ]
+        for row in data:
+            result = parse_food_entry_message(row[0])
+            for k in row[1].keys():
+                assert result[k] == row[1][k]
 
 
 def test_invalid_user(db_session, owner_user, no_food, default_units):

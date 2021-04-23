@@ -21,12 +21,15 @@ ADD_FOOD_COMMAND_PATTERN = re.compile(
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
-def parse_add_food_message(message: str) ->dict:
+
+def parse_add_food_message(message: str) -> dict:
     """
     Parses command message
     :param message:
-    :return: dictionary with food values and optionally food request id (see regex pattern)
+    :return: dictionary with food name, values and optionally food request id (see regex pattern)
     """
+    return {}
+
 
 def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
     """
