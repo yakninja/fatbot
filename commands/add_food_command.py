@@ -28,7 +28,13 @@ def parse_add_food_message(message: str) -> dict:
     :param message:
     :return: dictionary with food name, values and optionally food request id (see regex pattern)
     """
-    return {}
+    result = {'name': None, 'calories': None, 'carbs': None, 'fat': None, 'protein': None, 'req': None}
+    m = ADD_FOOD_COMMAND_PATTERN.match(message)
+    if not m:
+        return result
+
+    result['name'] = m.groups()[0].strip()
+    return result
 
 
 def add_food(db_session: Session, user: User, input_message: str) -> (str, str):

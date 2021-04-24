@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
-from commands.add_food_command import add_food
+from commands.add_food_command import add_food, parse_add_food_message
 from commands.food_entry_command import food_entry, parse_food_entry_message
 from models import Food, FoodName, FoodLog, date_now, FoodUnit, User, FoodRequest
 from models.core import create_food, create_unit, define_unit_for_food, get_food_by_name, get_or_create_user, \
@@ -18,23 +18,26 @@ def do_test_setup(db_session, owner_user, no_food, default_units):
     yield
 
 
-def test_parse_command(db_session, owner_user, no_food, default_units):
+def test_parse_add_food_message(db_session, owner_user, no_food, default_units):
     with do_test_setup(db_session, owner_user, no_food, default_units):
         data = [
             (
+                '/invalid',
+                {
+                    'name': None, 'calories': None, 'carbs': None, 'fat': None,
+                    'protein': None, 'req': None,
+                }
+            ),
+            (
                 '/add_food "Chicken soup" calories:36 fat:1.2 carbs:3.5 protein:2.5',
                 {
-                    'name': 'Chicken soup',
-                    'calories': 36.0,
-                    'fat': 1.2,
-                    'carbs': 3.5,
-                    'protein': 2.5,
-                    'req': None,
+                    'name': 'Chicken soup', 'calories': 36.0, 'fat': 1.2,
+                    'carbs': 3.5, 'protein': 2.5, 'req': None,
                 }
             ),
         ]
         for row in data:
-            result = parse_food_entry_message(row[0])
+            result = parse_add_food_message(row[0])
             for k in row[1].keys():
                 assert result[k] == row[1][k]
 

@@ -13,4 +13,3 @@ class UnitNotFound(FatbotError):
 
 class UnitNotDefined(FatbotError):
     pass
-
