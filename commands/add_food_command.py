@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shlex
 
 import i18n
 from sqlalchemy.orm import sessionmaker, Session
@@ -10,6 +11,7 @@ from telegram.ext import CallbackContext
 from db import db_engine
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
 from models.core import log_food
+from parser import ArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,18 @@ ADD_FOOD_COMMAND_PATTERN = re.compile(
 
 OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
+add_food_parser = ArgumentParser(description=i18n.t('Add a food record'))
+add_food_parser.add_argument('command_name', type=str, help=i18n.t('Command name'))
+add_food_parser.add_argument('food_name', type=str, help=i18n.t('Food name'))
+add_food_parser.add_argument('--calories', type=float, help=i18n.t('Calories per 100 g'), required=True)
+add_food_parser.add_argument('--carbs', type=float, help=i18n.t('Carbs per 100 g'),
+                             default=0.0, required=False)
+add_food_parser.add_argument('--fat', type=float, help=i18n.t('Fat per 100 g'),
+                             default=0.0, required=False)
+add_food_parser.add_argument('--protein', type=float, help=i18n.t('Protein per 100 g'),
+                             default=0.0, required=False)
+add_food_parser.add_argument('--request', type=int, help=i18n.t('Request ID'), required=False)
+
 
 def parse_add_food_message(message: str) -> dict:
     """
@@ -29,12 +43,8 @@ def parse_add_food_message(message: str) -> dict:
     :return: dictionary with food name, values and optionally food request id (see regex pattern)
     """
     result = {'name': None, 'calories': None, 'carbs': None, 'fat': None, 'protein': None, 'req': None}
-    m = ADD_FOOD_COMMAND_PATTERN.match(message)
-    if not m:
-        return result
-
-    result['name'] = m.groups()[0].strip()
-    return result
+    args = add_food_parser.parse_args(shlex.split(message))
+    return args
 
 
 def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
