@@ -65,7 +65,7 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
         db_session.commit()
         owner_message = [
             i18n.t('Please add new food (values per 100 g)'),
-            '/add_food "{}" calories:0.0 fat:0.0 carbs:0.0 protein:0.0 req:{}'.format(
+            '/add_food "{}" --calories=0.0 --fat=0.0 --carbs:0.0 --protein==0.0 --request={}'.format(
                 food_name, food_request.id),
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
@@ -76,7 +76,7 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
         owner_message = [
             i18n.t('Please add and define new unit'),
             '/add_unit "{}"'.format(unit_name),
-            '/define_unit "{}" "{}" grams:100 req:{}'.format(
+            '/define_unit "{}" "{}" --grams=100 --request={}'.format(
                 food_name, unit_name, food_request.id),
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
@@ -86,7 +86,7 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
         db_session.commit()
         owner_message = [
             i18n.t('Please define unit for this food'),
-            '/define_unit "{}" "{}" grams:100 default:true req:{}'.format(
+            '/define_unit "{}" "{}" --grams=100 --default=true --request={}'.format(
                 food_name, unit_name, food_request.id),
         ]
         return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)

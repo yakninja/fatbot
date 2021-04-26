@@ -201,14 +201,14 @@ def log_food(db_session: Session, locale: str, user: User,
     return food_log
 
 
-def create_food(db_session: Session, locale: str, name: str,
-                calories: float, fat: float, carbs: float, protein: float) -> Food:
+def create_food(db_session: Session, locale: str, food_name: str,
+                calories: float = 0.0, fat: float = 0.0, carbs: float = 0.0, protein: float = 0.0) -> Food:
     """
     Creates food of given value per 1 gram
 
     :param db_session:
     :param locale:
-    :param name:
+    :param food_name:
     :param calories:
     :param fat:
     :param carbs:
@@ -219,11 +219,11 @@ def create_food(db_session: Session, locale: str, name: str,
     db_session.add(f)
 
     if db_session.query(FoodName).filter_by(
-            language=locale, name=name).count() > 0:
+            language=locale, name=food_name).count() > 0:
         db_session.rollback()
         raise IntegrityError
     db_session.commit()  # flush?
-    fn = FoodName(food_id=f.id, language=locale, name=name)
+    fn = FoodName(food_id=f.id, language=locale, name=food_name)
     db_session.add(fn)
     db_session.commit()
     return f

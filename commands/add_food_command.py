@@ -4,24 +4,18 @@ import re
 import shlex
 
 import i18n
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
 
 from db import db_engine
+from exc import FoodNotFound
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
-from models.core import log_food
+from models.core import log_food, get_food_by_name, create_food
 from parser import ArgumentParser
 
 logger = logging.getLogger(__name__)
-
-ADD_FOOD_COMMAND_PATTERN = re.compile(
-    '^/add_food\\s*' +
-    '"(.+?)"' +
-    '(\\s+(calories|carbs|fat|protein|req):([0-9.]+))+$'
-)
-
-OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 
 add_food_parser = ArgumentParser(description=i18n.t('Add a food record'))
 add_food_parser.add_argument('command_name', type=str, help=i18n.t('Command name'))
@@ -36,15 +30,18 @@ add_food_parser.add_argument('--protein', type=float, help=i18n.t('Protein per 1
 add_food_parser.add_argument('--request', type=int, help=i18n.t('Request ID'), required=False)
 
 
-def parse_add_food_message(message: str) -> dict:
+def parse_add_food_message(message: str):
     """
     Parses command message
     :param message:
     :return: dictionary with food name, values and optionally food request id (see regex pattern)
     """
-    result = {'name': None, 'calories': None, 'carbs': None, 'fat': None, 'protein': None, 'req': None}
-    args = add_food_parser.parse_args(shlex.split(message))
-    return args
+    parts = shlex.split(message)
+    params = vars(add_food_parser.parse_args(parts))
+    if params['command_name'] != '/add_food':
+        raise ValueError(i18n.t('Invalid command format'))
+    del (params['command_name'])
+    return params
 
 
 def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
@@ -54,12 +51,24 @@ def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
     :param input_message:
     :return: user_message, owner_message
     """
-    m = ADD_FOOD_COMMAND_PATTERN.match(input_message)
-    if not m:
+    try:
+        params = parse_add_food_message(input_message)
+    except ValueError:
         return i18n.t('Invalid command format'), None
 
-    if str(user.id) != str(OWNER_USER_ID):
+    if str(user.telegram_id) != str(os.getenv('OWNER_USER_ID')):
         return i18n.t('Invalid user id'), None
+
+    try:
+        get_food_by_name(db_session, i18n.get('locale'), params['food_name'])
+        return i18n.t('Food already exists'), None
+    except NoResultFound:
+        pass
+
+    request_id = params['request']
+    del (params['request'])
+    create_food(db_session, locale=i18n.get('locale'), **params)
+    return i18n.t('Food added'), None
 
 
 def add_update_command(update: Update, _: CallbackContext) -> None:
