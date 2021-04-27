@@ -21,7 +21,7 @@ i18n.set('locale', 'ru')
 i18n.set('fallback', 'en')
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-OWNER_USER_ID = os.getenv('OWNER_USER_ID')
+OWNER_TELEGRAM_ID = os.getenv('OWNER_TELEGRAM_ID')
 
 
 def start_command(update: Update, _: CallbackContext) -> None:

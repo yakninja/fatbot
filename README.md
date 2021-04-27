@@ -8,7 +8,7 @@
 - `source venv/bin/activate`
 - `pip install -r requirements.txt`
 - `export TELEGRAM_TOKEN=...`
-- `export OWNER_USER_ID=...`
+- `export OWNER_TELEGRAM_ID=...`
 - `export DB_HOST=127.0.0.1`
 - `export DB_NAME=fatbot`
 - `export DB_USER=fatbot`

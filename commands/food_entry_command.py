@@ -14,7 +14,6 @@ from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
 
-OWNER_USER_ID = os.getenv('OWNER_USER_ID')
 FOOD_ENTRY_PATTERN = re.compile('^(.+?)(\\s+([0-9.,]+)(\\s?[^%]+)?)?\\s*$')
 
 
@@ -46,16 +45,18 @@ def parse_food_entry_message(message: str) -> (str, float, str):
     return food_name, qty, unit_name
 
 
-def food_entry(db_session: Session, user: User, input_message: str) -> (str, str):
+def food_entry(db_session: Session, user: User, input_message: str) -> dict:
     """
     :param db_session:
     :param user:
     :param input_message:
-    :return: user_message, owner_message
+    :return: dictionary {telegram_id: message}
     """
+    user_tid = str(user.telegram_id)
+    owner_tid = os.getenv('OWNER_TELEGRAM_ID')
     food_name, qty, unit_name = parse_food_entry_message(input_message)
     if food_name is None:
-        return i18n.t('I don\'t understand'), None
+        return {user_tid: i18n.t('I don\'t understand')}
 
     try:
         food_log = log_food(db_session, i18n.get('locale'), user, food_name, unit_name, qty)
@@ -68,7 +69,10 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
             '/add_food "{}" --calories=0.0 --fat=0.0 --carbs:0.0 --protein==0.0 --request={}'.format(
                 food_name, food_request.id),
         ]
-        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
+        return {
+            user_tid: i18n.t('The food was not found, forwarding request to the owner'),
+            owner_tid: '\n'.join(owner_message),
+        }
     except UnitNotFound:
         food_request = FoodRequest(user_id=user.id, request=input_message)
         db_session.add(food_request)
@@ -79,7 +83,10 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
             '/define_unit "{}" "{}" --grams=100 --request={}'.format(
                 food_name, unit_name, food_request.id),
         ]
-        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
+        return {
+            user_tid: i18n.t('The food was not found, forwarding request to the owner'),
+            owner_tid: '\n'.join(owner_message),
+        }
     except UnitNotDefined:
         food_request = FoodRequest(user_id=user.id, request=input_message)
         db_session.add(food_request)
@@ -89,14 +96,20 @@ def food_entry(db_session: Session, user: User, input_message: str) -> (str, str
             '/define_unit "{}" "{}" --grams=100 --default=true --request={}'.format(
                 food_name, unit_name, food_request.id),
         ]
-        return i18n.t('The food was not found, forwarding request to the owner'), '\n'.join(owner_message)
+        return {
+            user_tid: i18n.t('The food was not found, forwarding request to the owner'),
+            owner_tid: '\n'.join(owner_message),
+        }
 
     message_lines = [
         i18n.t('Food added'),
         food_log_message(db_session, food_log),
     ]
     message = '\n'.join(message_lines)
-    return message, message
+    return {
+        user_tid: message,
+        owner_tid: message,
+    }
 
 
 def food_entry_command(update: Update, _: CallbackContext) -> None:
@@ -108,10 +121,13 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
     """
     db_session = sessionmaker(bind=db_engine)()
     from_user = update.message.from_user
+    owner_tid = os.getenv('OWNER_TELEGRAM_ID')
+
     info = "{} {}: {}".format(from_user.id, from_user.username, update.message.text)
     logger.info(info)
-    _.bot.send_message(OWNER_USER_ID, info)
+    _.bot.send_message(owner_tid, info)
+
     user = get_or_create_user(db_session, from_user.id)
-    user_message, owner_message = food_entry(db_session, user, update.message.text)
-    _.bot.send_message(OWNER_USER_ID, owner_message)
-    _.bot.send_message(from_user.id, user_message)
+    messages = food_entry(db_session, user, update.message.text)
+    for tid in messages.keys():
+        _.bot.send_message(tid, messages[tid])

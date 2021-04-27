@@ -1,14 +1,12 @@
-import datetime
+import os
 from contextlib import contextmanager
 
 import i18n
-import pytest
 from sqlalchemy import desc
-from sqlalchemy.exc import NoResultFound
 
 from commands.food_entry_command import food_entry, parse_food_entry_message
-from models import Food, FoodName, FoodLog, date_now, FoodUnit, User, FoodRequest
-from models.core import create_food, create_unit, define_unit_for_food, get_food_by_name, get_or_create_user, \
+from models import FoodLog, date_now, User, FoodRequest
+from models.core import create_food, create_unit, define_unit_for_food, get_or_create_user, \
     get_gram_unit
 
 
@@ -42,8 +40,10 @@ def test_invalid_command(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         assert db_session.query(User).count() == 0
         user = get_or_create_user(db_session, 12345)
-        user_message, owner_message = food_entry(db_session, user, '')
-        assert user_message == i18n.t('I don\'t understand')
+        messages = food_entry(db_session, user, '')
+        tid = str(user.telegram_id)
+        assert tid in messages
+        assert messages[tid] == i18n.t('I don\'t understand')
 
 
 def test_non_existing_food(db_session, no_users, no_food, default_units):
@@ -58,10 +58,14 @@ def test_non_existing_food(db_session, no_users, no_food, default_units):
         ]
         request_count = 0
         user = get_or_create_user(db_session, 12345)
+        tid = str(user.telegram_id)
+        owner_id = os.getenv('OWNER_TELEGRAM_ID')
         for entry in data:
-            user_message, owner_message = food_entry(db_session, user, entry)
-            assert user_message == user_reply
-            assert owner_reply in owner_message
+            messages = food_entry(db_session, user, entry)
+            assert tid in messages
+            assert owner_id in messages
+            assert messages[tid] == user_reply
+            assert owner_reply in messages[owner_id]
             request_count += 1
             assert db_session.query(FoodRequest).count() == request_count
 
@@ -76,10 +80,14 @@ def test_non_existing_unit(db_session, no_users, no_food, default_units):
         create_food(db_session, i18n.get('locale'), 'Chicken soup',
                     0.36, 0.012, 0.035, 0.025)
         user = get_or_create_user(db_session, 12345)
-        user_message, owner_message = food_entry(db_session, user,
-                                                 'Chicken soup 1 bowl')
-        assert user_message == user_reply
-        assert owner_reply in owner_message
+        tid = str(user.telegram_id)
+        owner_id = os.getenv('OWNER_TELEGRAM_ID')
+        messages = food_entry(db_session, user,
+                              'Chicken soup 1 bowl')
+        assert tid in messages
+        assert owner_id in messages
+        assert messages[tid] == user_reply
+        assert owner_reply in messages[owner_id]
         assert db_session.query(FoodLog).count() == 0
         assert db_session.query(FoodRequest).count() == 1
         assert db_session.query(User).count() == 1
@@ -93,10 +101,14 @@ def test_undefined_unit(db_session, no_users, no_food, default_units):
                     0.36, 0.012, 0.035, 0.025)
         create_unit(db_session, i18n.get('locale'), 'bowl')
         user = get_or_create_user(db_session, 12345)
-        user_message, owner_message = food_entry(db_session, user,
-                                                 'Chicken soup 1 bowl')
-        assert user_message == user_reply
-        assert owner_reply in owner_message
+        tid = str(user.telegram_id)
+        owner_id = os.getenv('OWNER_TELEGRAM_ID')
+        messages = food_entry(db_session, user,
+                              'Chicken soup 1 bowl')
+        assert tid in messages
+        assert owner_id in messages
+        assert messages[tid] == user_reply
+        assert owner_reply in messages[owner_id]
         assert db_session.query(FoodLog).count() == 0
         assert db_session.query(FoodRequest).count() == 1
         assert db_session.query(User).count() == 1
@@ -109,10 +121,14 @@ def test_success(db_session, no_users, no_food, default_units):
         unit = create_unit(db_session, i18n.get('locale'), 'bowl')
         define_unit_for_food(db_session, food, unit, 350, False)
         user = get_or_create_user(db_session, 12345)
-        user_message, owner_message = food_entry(db_session, user,
-                                                 'Chicken soup 1 bowl')
-        assert i18n.t('Food added') in user_message
-        assert i18n.t('Food added') in owner_message
+        tid = str(user.telegram_id)
+        owner_id = os.getenv('OWNER_TELEGRAM_ID')
+        messages = food_entry(db_session, user,
+                              'Chicken soup 1 bowl')
+        assert tid in messages
+        assert owner_id in messages
+        assert i18n.t('Food added') in messages[tid]
+        assert i18n.t('Food added') in messages[owner_id]
         assert db_session.query(FoodLog).count() == 1
         assert db_session.query(FoodRequest).count() == 0
         assert db_session.query(User).count() == 1
@@ -128,10 +144,12 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.carbs == 12.25
         assert food_log.protein == 8.75
 
-        user_message, owner_message = food_entry(db_session, user,
-                                                 'Chicken soup 150 g')
-        assert i18n.t('Food added') in user_message
-        assert i18n.t('Food added') in owner_message
+        messages = food_entry(db_session, user,
+                              'Chicken soup 150 g')
+        assert tid in messages
+        assert owner_id in messages
+        assert i18n.t('Food added') in messages[tid]
+        assert i18n.t('Food added') in messages[owner_id]
         assert db_session.query(FoodLog).count() == 2
         assert db_session.query(FoodRequest).count() == 0
         assert db_session.query(User).count() == 1

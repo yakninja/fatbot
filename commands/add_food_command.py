@@ -13,7 +13,7 @@ from commands.food_entry_command import food_entry
 from db import db_engine
 from exc import FoodNotFound
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
-from models.core import log_food, get_food_by_name, create_food
+from models.core import log_food, get_food_by_name, create_food, define_unit_for_food, get_gram_unit
 from parser import ArgumentParser
 
 logger = logging.getLogger(__name__)
@@ -45,44 +45,55 @@ def parse_add_food_message(message: str):
     return params
 
 
-def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
+def add_food(db_session: Session, user: User, input_message: str) -> dict:
     """
     :param db_session:
     :param user:
     :param input_message:
-    :return: user_message, owner_message
+    :return: dictionary {telegram_id: message}
     """
+    user_tid = str(user.telegram_id)
+    owner_tid = os.getenv('OWNER_TELEGRAM_ID')
+
     try:
         params = parse_add_food_message(input_message)
     except ValueError:
-        return i18n.t('Invalid command format'), None
+        return {user_tid: i18n.t('Invalid command format')}
 
-    if str(user.telegram_id) != str(os.getenv('OWNER_USER_ID')):
-        return i18n.t('Invalid user id'), None
+    if user_tid != owner_tid:
+        return {user_tid: i18n.t('Invalid user id')}
 
     try:
         get_food_by_name(db_session, i18n.get('locale'), params['food_name'])
-        return i18n.t('Food already exists'), None
+        return {user_tid: i18n.t('Food already exists')}
     except NoResultFound:
         pass
 
+    food = create_food(db_session, locale=i18n.get('locale'),
+                       food_name=params['food_name'],
+                       calories=params['calories'] / 100,
+                       fat=params['fat'] / 100,
+                       carbs=params['carbs'] / 100,
+                       protein=params['protein'] / 100)
+    define_unit_for_food(db_session, food, get_gram_unit(db_session), 1.0, True)
+
     request_id = params['request']
-    del (params['request'])
-    create_food(db_session, locale=i18n.get('locale'), **params)
     if request_id:
         request = db_session.query(FoodRequest).get(request_id)
         if request:
             # now when food is added, repeat the request
-            user_message, owner_message = food_entry(db_session, user, request.request)
-    return i18n.t('Food added'), None
+            messages = food_entry(db_session, request.user, request.request)
+            messages[owner_tid] = i18n.t('Food added') + "\n" + messages[owner_tid]
+            return messages
+    return {user_tid: i18n.t('Food added')}
 
 
 def add_update_command(update: Update, _: CallbackContext) -> None:
     db_session = sessionmaker(bind=db_engine)()
     info = "{} {}: {}".format(update.message.from_user.id, update.message.from_user.username, update.message.text)
     logger.info(info)
-    if str(update.message.from_user.id) != str(OWNER_USER_ID):
-        logger.info('Invalid sender: {} != {}'.format(update.message.from_user.id, OWNER_USER_ID))
+    if str(update.message.from_user.id) != str(OWNER_TELEGRAM_ID):
+        logger.info('Invalid sender: {} != {}'.format(update.message.from_user.id, OWNER_TELEGRAM_ID))
         return
     m = ADD_UPDATE_COMMAND_PATTERN.match(update.message.text)
     if not m:
@@ -160,7 +171,7 @@ def add_update_command(update: Update, _: CallbackContext) -> None:
         db_session.add(gram_food_unit)
         db_session.commit()
 
-    _.bot.send_message(OWNER_USER_ID, i18n.t('Food added'))
+    _.bot.send_message(OWNER_TELEGRAM_ID, i18n.t('Food added'))
 
     if request_id:
         logger.info('Request id: {}'.format(request_id))

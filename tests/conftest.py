@@ -33,10 +33,10 @@ def no_users(db_session):
 
 @pytest.fixture(scope='function')
 def owner_user(db_session):
-    os.environ['OWNER_USER_ID'] = '111222333'
+    os.environ['OWNER_TELEGRAM_ID'] = '111222333'
     db_session.query(User).delete()
     db_session.commit()
-    get_or_create_user(db_session, telegram_id=os.environ['OWNER_USER_ID'])
+    get_or_create_user(db_session, telegram_id=os.environ['OWNER_TELEGRAM_ID'])
 
 
 @pytest.fixture(scope='function')

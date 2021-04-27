@@ -59,29 +59,52 @@ def test_invalid_user(db_session, owner_user, no_food, default_units):
     with do_test_setup(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         user = get_or_create_user(db_session, 12345)
-        user_message, owner_message = add_food(
-            db_session, user, '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5')
-        assert i18n.t('Invalid user id') == user_message
+        tid = str(user.telegram_id)
+        messages = add_food(
+            db_session,
+            user,
+            '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
+        )
+        assert tid in messages
+        assert i18n.t('Invalid user id') == messages[tid]
 
 
 def test_invalid_command(db_session, owner_user, no_food, default_units):
     with do_test_setup(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         user = db_session.query(User).one()
-        user_message, owner_message = add_food(
-            db_session, user, '/invalid "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5')
-        assert i18n.t('Invalid command format') == user_message
+        tid = str(user.telegram_id)
+        messages = add_food(
+            db_session,
+            user,
+            '/invalid "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
+        )
+        assert tid in messages
+        assert i18n.t('Invalid command format') == messages[tid]
+
+        messages = add_food(
+            db_session,
+            user,
+            '/add_food "Chicken soup"'  # calories required
+        )
+        assert tid in messages
+        assert i18n.t('Invalid command format') == messages[tid]
 
 
 def test_duplicate_food(db_session, owner_user, no_food, default_units):
     with do_test_setup(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         user = db_session.query(User).one()
-        assert str(user.telegram_id) == str(os.getenv('OWNER_USER_ID'))
+        tid = str(user.telegram_id)
+        assert tid == str(os.getenv('OWNER_TELEGRAM_ID'))
         create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36)
-        user_message, owner_message = add_food(
-            db_session, user, '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5')
-        assert i18n.t('Food already exists') == user_message
+        messages = add_food(
+            db_session,
+            user,
+            '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
+        )
+        assert tid in messages
+        assert i18n.t('Food already exists') == messages[tid]
 
 
 def test_valid(db_session, owner_user, no_food, default_units):
@@ -97,28 +120,46 @@ def test_valid(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         assert db_session.query(FoodLog).count() == 0
         assert db_session.query(FoodRequest).count() == 0
-        user = db_session.query(User).one()
+        owner_user = db_session.query(User).one()
+        owner_tid = str(owner_user.telegram_id)
 
         with pytest.raises(NoResultFound):
             get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
                              name='Chicken soup')
 
-        user_message, owner_message = add_food(
-            db_session, user, '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5')
-        assert i18n.t('Food added') == user_message
+        messages = add_food(
+            db_session,
+            owner_user,
+            '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
+        )
+        assert owner_tid in messages
+        assert i18n.t('Food added') == messages[owner_tid]
 
         food = get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
                                 name='Chicken soup')
-        assert food.calories == 36
-        assert food.fat == 1.2
-        assert food.carbs == 3.5
-        assert food.protein == 2.5
+        assert food.calories == 0.36
+        assert food.fat == 0.012
+        assert food.carbs == 0.035
+        assert food.protein == 0.025
         assert db_session.query(FoodLog).count() == 0
+
+        gram_unit = get_gram_unit(db_session)
+        food_unit = db_session.query(FoodUnit).filter_by(
+            food_id=food.id, unit_id=gram_unit.id).one()
+        assert food_unit.grams == 1
+        assert food_unit.is_default
 
 
 def test_valid_request_grams(db_session, owner_user, no_food, default_units):
     """
-    Add food with prior food request, existing unit (grams)
+    Add food with implicitly defined unit (g) and prior food request, i.e:
+
+    user: Apple 120 g
+    ... food request record created
+    owner: /add_food Apple --calories=... --request=...
+    ... food request gets resolved
+    ... user gets a reply with log entry
+
     :param db_session:
     :param owner_user:
     :param no_food:
@@ -129,24 +170,29 @@ def test_valid_request_grams(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         assert db_session.query(FoodRequest).count() == 0
         assert db_session.query(FoodLog).count() == 0
-        user = db_session.query(User).one()
+        owner_user = db_session.query(User).one()
+        owner_tid = str(owner_user.telegram_id)
+        user = get_or_create_user(db_session, 12345)
+        tid = str(user.telegram_id)
 
         with pytest.raises(NoResultFound):
             get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
                              name='Apple')
 
-        user_message, owner_message = food_entry(db_session, user,
-                                                 'Apple 120 g')
+        food_entry(db_session, user, 'Apple 120 g')
         assert db_session.query(FoodRequest).count() == 1
         assert db_session.query(FoodLog).count() == 0
         request = db_session.query(FoodRequest).first()
         assert request.request == 'Apple 120 g'
 
-        user_message, owner_message = add_food(
-            db_session, user,
+        messages = add_food(
+            db_session, owner_user,
             '/add_food Apple --calories=52 --fat=0.2 ' +
             '--carbs=14 --protein=0.3 --request={}'.format(request.id))
-        assert i18n.t('Food added') == user_message
+        assert owner_tid in messages
+        assert tid in messages
+        assert i18n.t('Food added') in messages[owner_tid]
+        assert i18n.t('Food added') in messages[tid]
         assert db_session.query(FoodLog).count() == 1
         food_log = db_session.query(FoodLog).first()
         assert food_log.calories == 62.4  # 52 * 1.2
