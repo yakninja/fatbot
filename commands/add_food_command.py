@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.food_entry_command import food_entry
 from db import db_engine
 from exc import FoodNotFound
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
@@ -68,6 +69,11 @@ def add_food(db_session: Session, user: User, input_message: str) -> (str, str):
     request_id = params['request']
     del (params['request'])
     create_food(db_session, locale=i18n.get('locale'), **params)
+    if request_id:
+        request = db_session.query(FoodRequest).get(request_id)
+        if request:
+            # now when food is added, repeat the request
+            user_message, owner_message = food_entry(db_session, user, request.request)
     return i18n.t('Food added'), None
 
 

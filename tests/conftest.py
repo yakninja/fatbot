@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from db import get_db_url
-from models import User, FoodName, Food, UnitName, Unit, FoodRequest
+from models import User, FoodName, Food, UnitName, Unit, FoodRequest, FoodLog
 from models.core import create_default_units, get_or_create_user
 
 
@@ -41,6 +41,7 @@ def owner_user(db_session):
 
 @pytest.fixture(scope='function')
 def no_food(db_session):
+    db_session.query(FoodLog).delete()
     db_session.query(FoodRequest).delete()
     db_session.query(FoodName).delete()
     db_session.query(Food).delete()
