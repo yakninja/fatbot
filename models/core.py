@@ -66,14 +66,14 @@ def get_gram_unit(db_session: Session) -> Unit:
     return db_session.query(UnitName).filter_by(language='en', name='g').one().unit
 
 
-def get_food_by_name(db_session: Session, locale: str, name: str) -> Food:
+def get_food_by_name(db_session: Session, locale: str, food_name: str) -> Food:
     """
     :param db_session:
     :param locale:
-    :param name:
+    :param food_name:
     :return:
     """
-    return db_session.query(FoodName).filter_by(language=locale, name=name).one().food
+    return db_session.query(FoodName).filter_by(language=locale, name=food_name).one().food
 
 
 def get_or_create_user(db_session: Session, telegram_id) -> User:
@@ -144,14 +144,14 @@ def define_unit_for_food(db_session: Session, food: Food, unit: Unit, grams: flo
             db_session.commit()
 
 
-def get_unit_by_name(db_session: Session, locale: str, name: str) -> Unit:
+def get_unit_by_name(db_session: Session, locale: str, unit_name: str) -> Unit:
     """
     :param db_session:
     :param locale:
-    :param name:
+    :param unit_name:
     :return:
     """
-    return db_session.query(UnitName).filter_by(language=locale, name=name).one().unit
+    return db_session.query(UnitName).filter_by(language=locale, name=unit_name).one().unit
 
 
 def log_food(db_session: Session, locale: str, user: User,
@@ -215,18 +215,24 @@ def create_food(db_session: Session, locale: str, food_name: str,
     :param protein:
     :return:
     """
-    f = Food(calories=calories, fat=fat, carbs=carbs, protein=protein)
-    db_session.add(f)
+    food = Food(calories=calories, fat=fat, carbs=carbs, protein=protein)
+    db_session.add(food)
 
     if db_session.query(FoodName).filter_by(
             language=locale, name=food_name).count() > 0:
         db_session.rollback()
         raise IntegrityError
     db_session.commit()  # flush?
-    fn = FoodName(food_id=f.id, language=locale, name=food_name)
+    fn = FoodName(food_id=food.id, language=locale, name=food_name)
     db_session.add(fn)
     db_session.commit()
-    return f
+
+    # implicit gram unit
+    food_unit = FoodUnit(food_id=food.id, unit_id=get_gram_unit(db_session).id, grams=1, is_default=True)
+    db_session.add(food_unit)
+    db_session.commit()
+
+    return food
 
 
 def get_food_name(db_session: Session, food: Food) -> str:

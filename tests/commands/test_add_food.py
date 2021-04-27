@@ -125,7 +125,7 @@ def test_valid(db_session, owner_user, no_food, default_units):
 
         with pytest.raises(NoResultFound):
             get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
-                             name='Chicken soup')
+                             food_name='Chicken soup')
 
         messages = add_food(
             db_session,
@@ -136,7 +136,7 @@ def test_valid(db_session, owner_user, no_food, default_units):
         assert i18n.t('Food added') == messages[owner_tid]
 
         food = get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
-                                name='Chicken soup')
+                                food_name='Chicken soup')
         assert food.calories == 0.36
         assert food.fat == 0.012
         assert food.carbs == 0.035
@@ -177,7 +177,7 @@ def test_valid_request_grams(db_session, owner_user, no_food, default_units):
 
         with pytest.raises(NoResultFound):
             get_food_by_name(db_session=db_session, locale=i18n.get('locale'),
-                             name='Apple')
+                             food_name='Apple')
 
         food_entry(db_session, user, 'Apple 120 g')
         assert db_session.query(FoodRequest).count() == 1

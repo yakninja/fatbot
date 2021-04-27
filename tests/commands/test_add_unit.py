@@ -81,10 +81,10 @@ def test_valid(db_session, owner_user, default_units):
 
         with pytest.raises(NoResultFound):
             get_unit_by_name(db_session=db_session, locale=i18n.get('locale'),
-                             name='Bowl')
+                             unit_name='Bowl')
         messages = add_unit(db_session, owner_user, '/add_unit Bowl')
         assert owner_tid in messages
         assert i18n.t('Unit added') == messages[owner_tid]
 
         get_unit_by_name(db_session=db_session, locale=i18n.get('locale'),
-                         name='Bowl')
+                         unit_name='Bowl')

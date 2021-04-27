@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import shlex
 
 import i18n
@@ -11,9 +10,8 @@ from telegram.ext import CallbackContext
 
 from commands.food_entry_command import food_entry
 from db import db_engine
-from exc import FoodNotFound
-from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
-from models.core import log_food, get_food_by_name, create_food, define_unit_for_food, get_gram_unit, get_or_create_user
+from models import FoodRequest, User
+from models.core import get_food_by_name, create_food, define_unit_for_food, get_gram_unit, get_or_create_user
 from parser import ArgumentParser
 
 logger = logging.getLogger(__name__)

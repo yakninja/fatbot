@@ -19,7 +19,7 @@ from parser import ArgumentParser
 
 logger = logging.getLogger(__name__)
 
-add_unit_parser = ArgumentParser(description=i18n.t('Add a food record'))
+add_unit_parser = ArgumentParser(description=i18n.t('Add a unit record'))
 add_unit_parser.add_argument('command_name', type=str, help=i18n.t('Command name'))
 add_unit_parser.add_argument('unit_name', type=str, help=i18n.t('Unit name'))
 
