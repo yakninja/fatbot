@@ -1,11 +1,12 @@
+from datetime import datetime
+
 import i18n
 from sqlalchemy.orm import sessionmaker
 from telegram import Update
 from telegram.ext import CallbackContext
-from datetime import datetime
 
 from db import db_engine
-from models import date_now, FoodLog, FoodName, UnitName
+from models import date_now, FoodLog
 from models.core import get_or_create_user, get_food_name, get_unit_name
 
 

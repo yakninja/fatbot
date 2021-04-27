@@ -44,9 +44,12 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start_command))
     dispatcher.add_handler(CommandHandler("settings", settings_command))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("add", add_update_command))
-    dispatcher.add_handler(CommandHandler("update", add_update_command))
     dispatcher.add_handler(CommandHandler("day", day_command))
+
+    # admin commands
+    dispatcher.add_handler(CommandHandler("add_food", add_food_command))
+    dispatcher.add_handler(CommandHandler("add_unit", add_unit_command))
+    dispatcher.add_handler(CommandHandler("define_unit", define_unit_command))
 
     # default command: food entry
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, food_entry_command))

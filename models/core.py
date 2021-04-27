@@ -98,22 +98,22 @@ def get_or_create_user(db_session: Session, telegram_id) -> User:
     return user
 
 
-def create_unit(db_session: Session, locale: str, name: str) -> Unit:
+def create_unit(db_session: Session, locale: str, unit_name: str) -> Unit:
     """
 
     :param db_session:
     :param locale:
-    :param name:
+    :param unit_name:
     :return:
     """
     u = Unit()
     db_session.add(u)
     if db_session.query(UnitName).filter_by(
-            language=locale, name=name).count() > 0:
+            language=locale, name=unit_name).count() > 0:
         db_session.rollback()
         raise IntegrityError
     db_session.commit()  # flush?
-    un = UnitName(unit_id=u.id, language=locale, name=name)
+    un = UnitName(unit_id=u.id, language=locale, name=unit_name)
     db_session.add(un)
     db_session.commit()
     return u
