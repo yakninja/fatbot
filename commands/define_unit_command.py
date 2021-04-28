@@ -11,7 +11,7 @@ from telegram.ext import CallbackContext
 from commands.food_entry_command import food_entry
 from db import db_engine
 from models import FoodRequest, User, FoodUnit
-from models.core import get_food_by_name, create_food, define_unit_for_food, get_gram_unit, get_or_create_user, \
+from models.core import get_food_by_name, define_unit_for_food, get_gram_unit, get_or_create_user, \
     get_unit_by_name
 from parser import ArgumentParser, str2bool
 
@@ -29,7 +29,7 @@ define_unit_parser.add_argument('--request', type=int, help=i18n.t('Request ID')
 
 def parse_define_unit_message(message: str):
     """
-    Parses command message
+    Parses define_unit command message
     :param message:
     :return: dictionary with food name, unit name, grams and optionally food request id
     """
@@ -46,7 +46,7 @@ def define_unit(db_session: Session, user: User, input_message: str) -> dict:
     :param db_session:
     :param user:
     :param input_message:
-    :return: dictionary {telegram_id: message}
+    :return: dictionary {telegram_id: message} Messages which you need to send
     """
     user_tid = str(user.telegram_id)
     owner_tid = os.getenv('OWNER_TELEGRAM_ID')
