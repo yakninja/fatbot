@@ -151,7 +151,18 @@ def get_unit_by_name(db_session: Session, locale: str, unit_name: str) -> Unit:
     :param unit_name:
     :return:
     """
-    return db_session.query(UnitName).filter_by(language=locale, name=unit_name).one().unit
+    return db_session.query(UnitName).filter_by(
+        language=locale, name=unit_name).one().unit
+
+
+def get_default_unit_for_food(db_session: Session, food: Food) -> Unit:
+    """
+    :param db_session:
+    :param food:
+    :return:
+    """
+    return db_session.query(FoodUnit).filter_by(
+        food_id=food.id, is_default=True).one().unit
 
 
 def log_food(db_session: Session, locale: str, user: User,
@@ -176,10 +187,13 @@ def log_food(db_session: Session, locale: str, user: User,
     except NoResultFound:
         raise FoodNotFound
 
-    try:
-        unit = get_unit_by_name(db_session, locale, unit_name)
-    except NoResultFound:
-        raise UnitNotFound
+    if unit_name is None:
+        unit = get_default_unit_for_food(db_session, food)
+    else:
+        try:
+            unit = get_unit_by_name(db_session, locale, unit_name)
+        except NoResultFound:
+            raise UnitNotFound
 
     try:
         food_unit = db_session.query(FoodUnit).filter_by(

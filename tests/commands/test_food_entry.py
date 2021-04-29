@@ -144,8 +144,7 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.carbs == 12.25
         assert food_log.protein == 8.75
 
-        messages = food_entry(db_session, user,
-                              'Chicken soup 150 g')
+        messages = food_entry(db_session, user, 'Chicken soup 150 g')
         assert tid in messages
         assert owner_id in messages
         assert i18n.t('Food added') in messages[tid]
@@ -163,3 +162,19 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.fat == 1.8
         assert food_log.carbs == 5.25
         assert food_log.protein == 3.75
+
+        # testing default unit (g)
+        messages = food_entry(db_session, user, 'Chicken soup 120')
+        assert tid in messages
+        assert owner_id in messages
+        assert i18n.t('Food added') in messages[tid]
+        assert i18n.t('Food added') in messages[owner_id]
+        assert db_session.query(FoodLog).count() == 3
+
+        food_log = db_session.query(FoodLog).order_by(desc('id')).first()
+        assert food_log.unit_id == get_gram_unit(db_session).id
+        assert food_log.date.strftime('%Y-%m-%d') == date_now()
+        assert food_log.calories == 43.2  # 36 * 120 / 100
+        assert food_log.fat == 1.44
+        assert food_log.carbs == 4.2
+        assert food_log.protein == 3
