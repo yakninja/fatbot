@@ -14,7 +14,7 @@ from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
 
-FOOD_ENTRY_PATTERN = re.compile('^(.+?)(\\s+([0-9.,]+)(\\s?[^%]+)?)?\\s*$')
+FOOD_ENTRY_PATTERN = re.compile('^(.+?)(\\s+([0-9.,/]+)(\\s?[^%]+)?)?\\s*$')
 
 
 def parse_food_entry_message(message: str) -> (str, float, str):
@@ -31,7 +31,14 @@ def parse_food_entry_message(message: str) -> (str, float, str):
         return None, None, None
 
     try:
-        qty = max(1.0, float(m.groups()[2].strip().replace(',', '.')))
+        qty = m.groups()[2].strip().replace(',', '.')
+        if '/' in qty:
+            parts = qty.split('/')
+            if len(parts) == 2 and int(parts[1]) > 0:
+                qty = int(parts[0]) / int(parts[1])
+        qty = float(qty)
+        if qty <= 0:
+            qty = 1
     except (IndexError, AttributeError):
         qty = 1
 

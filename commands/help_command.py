@@ -20,6 +20,7 @@ def help_command(update: Update, _: CallbackContext) -> None:
         i18n.t('Chicken soup 1 bowl'),
         '',
         i18n.t('/day - show today stats'),
+        i18n.t('/weight 50 - record today weight'),
         i18n.t('/settings - show your settings'),
     ]
     update.message.reply_text("\n".join(help_strings))

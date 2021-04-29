@@ -30,7 +30,10 @@ def test_parse_food_entry():
         ('Yoghurt 3%', 'Yoghurt 3%', 1.0, None),
         ('Yoghurt 3% 200', 'Yoghurt 3%', 200.0, None),
         ('Yoghurt 3% 200 g', 'Yoghurt 3%', 200.0, 'g'),
-        (' Fresh bread   1  slice ', 'Fresh bread', 1.0, 'slice'),
+        (' Fresh bread   1.5  slice ', 'Fresh bread', 1.5, 'slice'),
+        ('Soup 0.1 bowl', 'Soup', 0.1, 'bowl'),
+        ('Egg 1/2', 'Egg', 0.5, None),
+        ('Egg 3/4', 'Egg', 0.75, None),
     ]
     for entry, food_name, unit_name, qty in data:
         assert (food_name, unit_name, qty) == parse_food_entry_message(entry)
@@ -77,8 +80,7 @@ def test_non_existing_unit(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         user_reply = i18n.t('The food was not found, forwarding request to the owner')
         owner_reply = i18n.t('Please add and define new unit')
-        create_food(db_session, i18n.get('locale'), 'Chicken soup',
-                    0.36, 0.012, 0.035, 0.025)
+        create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36, 0.012, 0.035, 0.025)
         user = get_or_create_user(db_session, 12345)
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
@@ -95,16 +97,14 @@ def test_non_existing_unit(db_session, no_users, no_food, default_units):
 
 def test_undefined_unit(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
-        user_reply = i18n.t('The food was not found, forwarding request to the owner')
-        owner_reply = i18n.t('Please define unit for this food')
-        create_food(db_session, i18n.get('locale'), 'Chicken soup',
-                    0.36, 0.012, 0.035, 0.025)
+        create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36, 0.012, 0.035, 0.025)
         create_unit(db_session, i18n.get('locale'), 'bowl')
         user = get_or_create_user(db_session, 12345)
+        user_reply = i18n.t('The food was not found, forwarding request to the owner')
+        owner_reply = i18n.t('Please define unit for this food')
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
-        messages = food_entry(db_session, user,
-                              'Chicken soup 1 bowl')
+        messages = food_entry(db_session, user, 'Chicken soup 1 bowl')
         assert tid in messages
         assert owner_id in messages
         assert messages[tid] == user_reply
@@ -123,8 +123,7 @@ def test_success(db_session, no_users, no_food, default_units):
         user = get_or_create_user(db_session, 12345)
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
-        messages = food_entry(db_session, user,
-                              'Chicken soup 1 bowl')
+        messages = food_entry(db_session, user, 'Chicken soup 1 bowl')
         assert tid in messages
         assert owner_id in messages
         assert i18n.t('Food added') in messages[tid]
@@ -139,6 +138,7 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.food_id == food.id
         assert food_log.unit_id == unit.id
         assert food_log.date.strftime('%Y-%m-%d') == date_now()
+        assert food_log.qty == 1
         assert food_log.calories == 126  # 36 * 350 / 100
         assert food_log.fat == 4.2
         assert food_log.carbs == 12.25
@@ -158,6 +158,7 @@ def test_success(db_session, no_users, no_food, default_units):
         assert food_log.food_id == food.id
         assert food_log.unit_id == get_gram_unit(db_session).id
         assert food_log.date.strftime('%Y-%m-%d') == date_now()
+        assert food_log.qty == 150
         assert food_log.calories == 54  # 36 * 150 / 100
         assert food_log.fat == 1.8
         assert food_log.carbs == 5.25
@@ -174,7 +175,25 @@ def test_success(db_session, no_users, no_food, default_units):
         food_log = db_session.query(FoodLog).order_by(desc('id')).first()
         assert food_log.unit_id == get_gram_unit(db_session).id
         assert food_log.date.strftime('%Y-%m-%d') == date_now()
+        assert food_log.qty == 120
         assert food_log.calories == 43.2  # 36 * 120 / 100
         assert food_log.fat == 1.44
         assert food_log.carbs == 4.2
         assert food_log.protein == 3
+
+        # fractional unit
+        messages = food_entry(db_session, user, 'Chicken soup 0.5 bowl')
+        assert tid in messages
+        assert owner_id in messages
+        assert i18n.t('Food added') in messages[tid]
+        assert i18n.t('Food added') in messages[owner_id]
+        food_log = db_session.query(FoodLog).order_by(desc('id')).first()
+        assert food_log.user_id == user.id
+        assert food_log.food_id == food.id
+        assert food_log.unit_id == unit.id
+        assert food_log.date.strftime('%Y-%m-%d') == date_now()
+        assert food_log.qty == 0.5
+        assert food_log.calories == 63  # 36 * 350 / 100 / 2
+        assert food_log.fat == 2.1
+        assert food_log.carbs == 6.125
+        assert food_log.protein == 4.375

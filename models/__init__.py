@@ -53,6 +53,20 @@ class FoodLog(Base):
         return "<FoodLog(user_id={}, food_id={})>".format(self.user_id, self.food_id)
 
 
+class WeightLog(Base):
+    __tablename__ = 'weight_log'
+
+    id = Column(Integer(), primary_key=True, unique=True, nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
+    created_at = Column(Integer(), default=time.time, nullable=False)
+    weight = Column(Float(), nullable=False)
+
+    user = relationship('User', foreign_keys=user_id)
+
+    def __repr__(self):
+        return "<WeightLog(user_id={}, weight={})>".format(self.user_id, self.weight)
+
+
 class FoodName(Base):
     __tablename__ = 'food_name'
 
