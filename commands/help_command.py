@@ -11,7 +11,7 @@ def help_command(update: Update, _: CallbackContext) -> None:
     :return:
     """
     help_strings = [
-        i18n.t('How to use:'),
+        '🥐' + i18n.t('Recording food:'),
         '',
         i18n.t('Apple 1'),
         i18n.t('or'),
@@ -19,8 +19,19 @@ def help_command(update: Update, _: CallbackContext) -> None:
         i18n.t('or'),
         i18n.t('Chicken soup 1 bowl'),
         '',
+        '🪨' + i18n.t('Recording weight:'),
+        '',
+        i18n.t('/weight %{weight}', weight=50.5),
+        i18n.t('or'),
+        i18n.t('weight %{weight}', weight=50.5),
+        '',
+        '❌' + i18n.t('Removing your last entry:'),
+        '',
+        i18n.t('/cancel'),
+        i18n.t('or'),
+        i18n.t('cancel'),
+        '',
         i18n.t('/day - show today stats'),
-        i18n.t('/weight 50 - record today weight'),
         i18n.t('/settings - show your settings'),
     ]
     update.message.reply_text("\n".join(help_strings))
