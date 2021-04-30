@@ -26,3 +26,9 @@ Protein: Белки
 Food added: Еда добавлена
 "Daily goal:": "Цель на день:"
 "Weight recorded: %{weight}": "Вес записан: %{weight}"
+/weight %{weight}: /weight %{weight}
+weight %{weight}: вес %{weight}
+cancel: отмена
+"Removing your last entry:": "Удаление последней записи:"
+"Recording weight:": "Запись веса:"
+"Recording food:": "Запись еды:"
