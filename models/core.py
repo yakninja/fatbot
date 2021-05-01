@@ -72,6 +72,7 @@ def get_food_by_name(db_session: Session, locale: str, food_name: str) -> Food:
     :param locale:
     :param food_name:
     :return:
+    :raises: NoResultFound if no food found with this name
     """
     return db_session.query(FoodName).filter_by(language=locale, name=food_name).one().food
 
@@ -150,6 +151,7 @@ def get_unit_by_name(db_session: Session, locale: str, unit_name: str) -> Unit:
     :param locale:
     :param unit_name:
     :return:
+    :raises: NoResultFound if no unit found with this name
     """
     return db_session.query(UnitName).filter_by(
         language=locale, name=unit_name).one().unit

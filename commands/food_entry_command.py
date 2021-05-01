@@ -3,6 +3,7 @@ import os
 import re
 
 import i18n
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -10,7 +11,7 @@ from telegram.ext import CallbackContext
 from db import db_engine
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
 from models import FoodRequest, User
-from models.core import get_or_create_user, log_food, food_log_message
+from models.core import get_or_create_user, log_food, food_log_message, get_unit_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,17 @@ def food_entry(db_session: Session, user: User, input_message: str) -> dict:
             '/add_food "{}" --calories=0.0 --fat=0.0 --carbs=0.0 --protein=0.0 --request={}'.format(
                 food_name, food_request.id),
         ]
+        try:
+            get_unit_by_name(db_session, i18n.get('locale'), unit_name)
+        except NoResultFound:
+            owner_message.extend([
+                i18n.t('or (if default unit is different from grams)'),
+                '/add_food "{}" --calories=0.0 --fat=0.0 --carbs=0.0 --protein=0.0'.format(food_name),
+                '/add_unit "{}"'.format(unit_name),
+                '/define_unit "{}" "{}" --grams=100 --default=true --request={}'.format(
+                    food_name, unit_name, food_request.id),
+            ])
+
         return {
             user_tid: i18n.t('The food was not found, forwarding request to the owner'),
             owner_tid: '\n'.join(owner_message),

@@ -43,6 +43,7 @@ def parse_define_unit_message(message: str):
 
 def define_unit(db_session: Session, user: User, input_message: str) -> dict:
     """
+    /define_unit food_name unit_name --grams=... --default=... --request=...
     :param db_session:
     :param user:
     :param input_message:

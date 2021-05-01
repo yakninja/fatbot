@@ -71,7 +71,6 @@ def add_unit_command(update: Update, _: CallbackContext) -> None:
     """
     Add unit command (only for owner)
     /add_unit "Unit name"
-
     :param update:
     :param _:
     :return:
