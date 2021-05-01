@@ -73,7 +73,7 @@ def food_entry(db_session: Session, user: User, input_message: str) -> dict:
         db_session.commit()
         owner_message = [
             i18n.t('Please add new food (values per 100 g)'),
-            '/add_food "{}" --calories=0.0 --fat=0.0 --carbs:0.0 --protein==0.0 --request={}'.format(
+            '/add_food "{}" --calories=0.0 --fat=0.0 --carbs=0.0 --protein=0.0 --request={}'.format(
                 food_name, food_request.id),
         ]
         return {
