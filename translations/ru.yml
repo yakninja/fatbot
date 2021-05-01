@@ -28,6 +28,7 @@ Food added: Еда добавлена
 "Weight recorded: %{weight}": "Вес записан: %{weight}"
 /weight %{weight}: /weight %{weight}
 weight %{weight}: вес %{weight}
+weight: вес
 cancel: отмена
 "Removing your last entry:": "Удаление последней записи:"
 "Recording weight:": "Запись веса:"

@@ -1,1 +1,2 @@
 "Received: %{message}": "Received: %{message}"
+weight %{weight}: weight %{weight}

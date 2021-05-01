@@ -14,7 +14,7 @@ from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
 
-WEIGHT_ENTRY_PATTERN = re.compile('^/weight\\s+([0-9.,]+)$')
+WEIGHT_ENTRY_PATTERN = re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')))
 
 
 def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
@@ -30,7 +30,7 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     if not m:
         return {user_tid: i18n.t('I don\'t understand')}
     try:
-        weight = float(m.groups()[0].strip().replace(',', '.'))
+        weight = float(m.groups()[1].strip().replace(',', '.'))
         if weight <= 0:
             return {user_tid: i18n.t('I don\'t understand')}
     except (IndexError, AttributeError):

@@ -1,5 +1,6 @@
 import os
 
+import i18n
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,6 +9,11 @@ from db import get_db_url
 from models import User, FoodName, Food, UnitName, Unit, FoodRequest, FoodLog
 from models.core import create_default_units, get_or_create_user
 
+i18n.load_path.append('./translations')
+i18n.set('filename_format', '{locale}.{format}')
+i18n.set('skip_locale_root_data', True)
+i18n.set('locale', 'en')
+i18n.set('fallback', 'en')
 
 @pytest.fixture(scope='module')
 def db_credentials():
@@ -53,5 +59,4 @@ def default_units(db_session):
     db_session.query(UnitName).delete()
     db_session.query(Unit).delete()
     db_session.commit()
-
     gram_unit_id, pc_unit_id = create_default_units(session=db_session)
