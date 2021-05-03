@@ -10,7 +10,7 @@ from models import date_now, FoodLog
 from models.core import get_or_create_user, get_food_name, get_unit_name
 
 
-def day_command(update: Update, _: CallbackContext) -> None:
+def today_command(update: Update, _: CallbackContext) -> None:
     db_session = sessionmaker(bind=db_engine)()
     strings = []
     user = get_or_create_user(db_session, update.message.from_user.id)

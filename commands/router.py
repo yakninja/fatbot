@@ -1,7 +1,9 @@
+import i18n
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from commands import weight_entry_command, food_entry_command
+from commands import weight_entry_command, food_entry_command, today_command
+from commands.weight_entry_command import get_weight_entry_pattern
 
 
 def router(command: str):
@@ -10,8 +12,9 @@ def router(command: str):
     :param command:
     :return:
     """
-    from commands.weight_entry_command import get_weight_entry_pattern
-    print(command, get_weight_entry_pattern())
+    command = command.strip()
+    if command == i18n.t('today'):
+        return today_command
     if get_weight_entry_pattern().match(command):
         return weight_entry_command
     return food_entry_command
