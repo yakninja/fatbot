@@ -14,7 +14,13 @@ from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
 
-WEIGHT_ENTRY_PATTERN = re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')))
+
+def get_weight_entry_pattern():
+    """
+    This depends on locale
+    :return:
+    """
+    return re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')))
 
 
 def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
@@ -26,15 +32,16 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     """
     user_tid = str(user.telegram_id)
     owner_tid = os.getenv('OWNER_TELEGRAM_ID')
-    m = WEIGHT_ENTRY_PATTERN.match(input_message)
+    m = get_weight_entry_pattern().match(input_message)
+    invalid_reply = {user_tid: i18n.t('I don\'t understand')}
     if not m:
-        return {user_tid: i18n.t('I don\'t understand')}
+        return invalid_reply
     try:
         weight = float(m.groups()[1].strip().replace(',', '.'))
         if weight <= 0:
-            return {user_tid: i18n.t('I don\'t understand')}
+            return invalid_reply
     except (IndexError, AttributeError):
-        return {user_tid: i18n.t('I don\'t understand')}
+        return invalid_reply
 
     db_session.add(WeightLog(user_id=user.id, weight=weight))
     db_session.commit()

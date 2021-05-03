@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 import logging
 import os
-import re
 
 import i18n
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
-
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 from commands import *
+from commands.router import router_command
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +49,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("add_unit", add_unit_command))
     dispatcher.add_handler(CommandHandler("define_unit", define_unit_command))
 
-    # default command: food entry
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, food_entry_command))
+    # default command: router
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, router_command))
 
     # Start the Bot
     updater.start_polling()
