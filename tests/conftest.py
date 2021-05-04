@@ -15,6 +15,7 @@ i18n.set('skip_locale_root_data', True)
 i18n.set('locale', 'en')
 i18n.set('fallback', 'en')
 
+
 @pytest.fixture(scope='module')
 def db_credentials():
     os.environ['DB_HOST'] = '127.0.0.1'

@@ -1,8 +1,10 @@
 import logging
 import os
 import re
+import time
 
 import i18n
+from sqlalchemy import desc
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -43,10 +45,21 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     except (IndexError, AttributeError):
         return invalid_reply
 
+    latest = db_session.query(WeightLog).filter_by(user_id=user.id).order_by(desc('created_at')).first()
+
     db_session.add(WeightLog(user_id=user.id, weight=weight))
     db_session.commit()
 
-    message = i18n.t('Weight recorded: %{weight}', weight='{:.1f}'.format(weight))
+    if latest:
+        delta = weight - latest.weight
+        days = round(float(time.time() - latest.created_at) / 86400)
+        per_day = 0 if days == 0 else delta / days
+        delta = '{}{:.1f}'.format('' if delta < 0 else '+', delta)
+        per_day = '{}{:.2f}'.format('' if per_day < 0 else '+', per_day)
+        message = i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
+                         weight='{:.1f}'.format(weight), delta=delta, per_day=per_day)
+    else:
+        message = i18n.t('Weight recorded: %{weight}', weight='{:.1f}'.format(weight))
 
     return {user_tid: message, owner_tid: message}
 

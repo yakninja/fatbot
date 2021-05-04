@@ -26,6 +26,7 @@ Protein: Белки
 Food added: Еда добавлена
 "Daily goal:": "Цель на день:"
 "Weight recorded: %{weight}": "Вес записан: %{weight}"
+"Weight recorded: %{weight} (%{delta}, %{per_day} per day)": "Вес записан: %{weight} (%{delta}, %{per_day} в день)"
 /weight %{weight}: /weight %{weight}
 weight %{weight}: вес %{weight}
 weight: вес

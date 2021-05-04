@@ -1,3 +1,5 @@
 "Received: %{message}": "Received: %{message}"
 /weight %{weight}: weight %{weight}
 weight %{weight}: weight %{weight}
+"Weight recorded: %{weight}": "Weight recorded: %{weight}"
+"Weight recorded: %{weight} (%{delta}, %{per_day} per day)": "Weight recorded: %{weight} (%{delta}, %{per_day} per day)"

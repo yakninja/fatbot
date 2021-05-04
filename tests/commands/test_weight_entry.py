@@ -40,23 +40,35 @@ def test_valid_command(db_session, no_users):
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
 
         data = [
-            ('/weight 50', 50.0),
-            ('/weight 50.5', 50.5),
-            ('/weight 70,1', 70.1),
-            (i18n.t('weight %{weight}', weight=100.7), 100.7),
+            ('/weight 50', 50.0, 'Weight recorded: 50.0'),
+
+            ('/weight 50.5', 50.5,
+             i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
+                    weight=50.5, delta='+0.5', per_day='+0.07')),
+
+            ('/weight 70,1', 70.1,
+             i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
+                    weight=70.1, delta='+19.6', per_day='+2.80')),
+
+            (i18n.t('weight %{weight}', weight=10.7), 10.7,
+             i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
+                    weight=10.7, delta='-59.4', per_day='-8.49')),
         ]
 
         log_count = 1
         for row in data:
             command = row[0]
             weight = row[1]
+            reply = row[2]
             messages = weight_entry(db_session, user, command)
             assert tid in messages
             assert owner_id in messages
-            assert messages[tid] == i18n.t('Weight recorded: %{weight}', weight=weight)
-            assert messages[owner_id] == i18n.t('Weight recorded: %{weight}', weight=weight)
+            assert messages[tid] == reply
+            assert messages[owner_id] == reply
             assert db_session.query(WeightLog).count() == log_count
             weight_log = db_session.query(WeightLog).order_by(desc('id')).first()
             assert weight_log.user_id == user.id
             assert weight_log.weight == weight
             log_count += 1
+            db_session.execute("""UPDATE weight_log SET created_at = created_at - 86400 * 7""")
+            db_session.commit()
