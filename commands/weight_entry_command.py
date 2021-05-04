@@ -20,7 +20,7 @@ def get_weight_entry_pattern():
     This depends on locale
     :return:
     """
-    return re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')))
+    return re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')), re.I)
 
 
 def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
