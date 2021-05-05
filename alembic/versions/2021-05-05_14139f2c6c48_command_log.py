@@ -17,14 +17,13 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_index('idx-weight_log-user_id-created_at', 'food_log')
-    op.create_index('idx-weight_log-user_id-created_at', 'weight_log', ['user_id', 'created_at'])
     op.create_table(
         'command_log',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('user_id', sa.Integer, nullable=False),
         sa.Column('created_at', sa.Integer, nullable=False),
-        sa.Column('weight', sa.Float(), nullable=False),
+        sa.Column('command_type', sa.Integer(), nullable=False),
+        sa.Column('command', sa.String(255), nullable=False)
     )
     op.create_index('idx-command_log-user_id-created_at', 'command_log', ['user_id', 'created_at'])
     op.create_foreign_key(
