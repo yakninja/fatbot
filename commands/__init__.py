@@ -6,6 +6,7 @@ from commands.define_unit_command import define_unit_command
 from commands.food_entry_command import food_entry_command
 from commands.weight_entry_command import weight_entry_command
 from commands.settings_command import settings_command
+from commands.cancel_command import cancel_command
 
 __all__ = [
     "help_command",
@@ -16,4 +17,5 @@ __all__ = [
     "food_entry_command",
     "weight_entry_command",
     "settings_command",
+    "cancel_command",
 ]

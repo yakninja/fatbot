@@ -43,6 +43,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("today", today_command))
     dispatcher.add_handler(CommandHandler("weight", weight_entry_command))
+    dispatcher.add_handler(CommandHandler("cancel", cancel_command))
 
     # admin commands
     dispatcher.add_handler(CommandHandler("add_food", add_food_command))

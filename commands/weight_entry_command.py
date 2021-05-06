@@ -11,7 +11,7 @@ from telegram.ext import CallbackContext
 
 from db import db_engine
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
-from models import FoodRequest, User, WeightLog
+from models import FoodRequest, User, WeightLog, CommandLog
 from models.core import get_or_create_user, log_food, food_log_message
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,11 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
                          weight='{:.1f}'.format(weight), delta=delta, per_day=per_day)
     else:
         message = i18n.t('Weight recorded: %{weight}', weight='{:.1f}'.format(weight))
+
+    command_log = CommandLog(user_id=user.id, command_type=CommandLog.WEIGHT_ENTRY,
+                             command=input_message)
+    db_session.add(command_log)
+    db_session.commit()
 
     return {user_tid: message, owner_tid: message}
 

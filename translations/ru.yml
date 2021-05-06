@@ -38,3 +38,5 @@ day: день
 today: сегодня
 "Settings:": "Настройки:"
 "Day statistics:": "Статистика за день:"
+"Command cancelled: %{command}": "Отменено: %{command}"
+Nothing to cancel: Нечего отменять

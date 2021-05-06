@@ -67,6 +67,24 @@ class WeightLog(Base):
         return "<WeightLog(user_id={}, weight={})>".format(self.user_id, self.weight)
 
 
+class CommandLog(Base):
+    __tablename__ = 'command_log'
+
+    FOOD_ENTRY = 1
+    WEIGHT_ENTRY = 2
+
+    id = Column(Integer(), primary_key=True, unique=True, nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
+    created_at = Column(Integer(), default=time.time, nullable=False)
+    command_type = Column(Integer(), nullable=False)
+    command = Column(String(255), nullable=False)
+
+    user = relationship('User', foreign_keys=user_id)
+
+    def __repr__(self):
+        return "<CommandLog(user_id={}, command={})>".format(self.user_id, self.command)
+
+
 class FoodName(Base):
     __tablename__ = 'food_name'
 
