@@ -47,6 +47,7 @@ def main() -> None:
 
     # admin commands
     dispatcher.add_handler(CommandHandler("add_food", add_food_command))
+    dispatcher.add_handler(CommandHandler("update_food", add_food_command))
     dispatcher.add_handler(CommandHandler("add_unit", add_unit_command))
     dispatcher.add_handler(CommandHandler("define_unit", define_unit_command))
 

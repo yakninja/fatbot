@@ -44,11 +44,34 @@ def test_parse_add_food_message(db_session, owner_user, no_food, default_units):
                     'carbs': 0, 'protein': 0.01, 'request': 123,
                 }
             ),
+            (
+                '/update_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5',
+                {
+                    'food_name': 'Chicken soup', 'calories': 36.0, 'fat': 1.2,
+                    'carbs': 3.5, 'protein': 2.5, 'request': None,
+                }
+            ),
+            (
+                '/update_food "Chicken soup" --calories=36.0',
+                {
+                    'food_name': 'Chicken soup', 'calories': 36.0, 'fat': 0,
+                    'carbs': 0, 'protein': 0, 'request': None,
+                }
+            ),
+            (
+                '/update_food Apple --p=.01 --calories=8 --request=123',
+                {
+                    'food_name': 'Apple', 'calories': 8, 'fat': 0,
+                    'carbs': 0, 'protein': 0.01, 'request': 123,
+                }
+            ),
         ]
         with pytest.raises(ValueError):
             parse_add_food_message('/invalid')
         with pytest.raises(ValueError):
             parse_add_food_message('/add_food "Chicken soup"')
+        with pytest.raises(ValueError):
+            parse_add_food_message('/update_food "Chicken soup"')
         for row in data:
             result = parse_add_food_message(row[0])
             for k in row[1].keys():
@@ -74,21 +97,20 @@ def test_invalid_command(db_session, owner_user, no_food, default_units):
         assert db_session.query(User).count() == 1
         user = db_session.query(User).one()
         tid = str(user.telegram_id)
-        messages = add_food(
-            db_session,
-            user,
-            '/invalid "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
-        )
-        assert tid in messages
-        assert i18n.t('Invalid command format') == messages[tid]
+        data = [
+            '/invalid "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5',
+            '/add_food "Chicken soup"',  # calories required
+            '/update_food "Chicken soup"',  # calories required
+        ]
 
-        messages = add_food(
-            db_session,
-            user,
-            '/add_food "Chicken soup"'  # calories required
-        )
-        assert tid in messages
-        assert i18n.t('Invalid command format') == messages[tid]
+        for invalid in data:
+            messages = add_food(
+                db_session,
+                user,
+                invalid
+            )
+            assert tid in messages
+            assert i18n.t('Invalid command format') == messages[tid]
 
 
 def test_duplicate_food(db_session, owner_user, no_food, default_units):
@@ -104,7 +126,33 @@ def test_duplicate_food(db_session, owner_user, no_food, default_units):
             '/add_food "Chicken soup" --calories=36 --fat=1.2 --carbs=3.5 --protein=2.5'
         )
         assert tid in messages
-        assert i18n.t('Food already exists') == messages[tid]
+        assert i18n.t('Food already exists') in messages[tid]
+
+
+def test_update_food(db_session, owner_user, no_food, default_units):
+    with do_test_setup(db_session, owner_user, no_food, default_units):
+        user = db_session.query(User).one()
+        tid = str(user.telegram_id)
+        messages = add_food(
+            db_session,
+            user,
+            '/update_food "Chicken soup" --calories=37 --fat=1.3 --carbs=3.6 --protein=2.6'
+        )
+        assert tid in messages
+        assert i18n.t('Food not found') == messages[tid]
+        create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36, 0.012, 0.035, 0.025)
+        messages = add_food(
+            db_session,
+            user,
+            '/update_food "Chicken soup" --calories=37 --fat=1.3 --carbs=3.6 --protein=2.6'
+        )
+        assert tid in messages
+        assert i18n.t('Food updated') == messages[tid]
+        food = db_session.query(Food).one()
+        assert food.calories == 0.37
+        assert food.fat == 0.013
+        assert food.carbs == 0.036
+        assert food.protein == 0.026
 
 
 def test_valid(db_session, owner_user, no_food, default_units):

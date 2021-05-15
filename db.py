@@ -13,4 +13,4 @@ def get_db_url():
     )
 
 
-db_engine = create_engine(get_db_url())
+db_engine = create_engine(get_db_url(), pool_size=50, max_overflow=10)

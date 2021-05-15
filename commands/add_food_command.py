@@ -37,9 +37,8 @@ def parse_add_food_message(message: str):
     """
     parts = shlex.split(message)
     params = vars(add_food_parser.parse_args(parts))
-    if params['command_name'] != '/add_food':
+    if params['command_name'] not in ['/add_food', '/update_food']:
         raise ValueError(i18n.t('Invalid command format'))
-    del (params['command_name'])
     return params
 
 
@@ -61,29 +60,48 @@ def add_food(db_session: Session, user: User, input_message: str) -> dict:
     if user_tid != owner_tid:
         return {user_tid: i18n.t('Invalid user id')}
 
+    food = None
     try:
-        get_food_by_name(db_session, i18n.get('locale'), params['food_name'])
-        return {user_tid: i18n.t('Food already exists')}
+        food = get_food_by_name(db_session, i18n.get('locale'), params['food_name'])
+        if params['command_name'] == '/add_food':
+            strings = [
+                i18n.t('Food already exists'),
+                i18n.t('Use /update_food "{}" --calories={} --fat={} --carbs={} --protein={}'.format(
+                    params['food_name'],
+                    food.calories * 100, food.fat * 100,
+                    food.carbs * 100, food.protein * 100))
+            ]
+            return {user_tid: "\n".join(strings)}
     except NoResultFound:
-        pass
+        if params['command_name'] == '/update_food':
+            return {user_tid: i18n.t('Food not found')}
 
-    food = create_food(db_session, locale=i18n.get('locale'),
-                       food_name=params['food_name'],
-                       calories=params['calories'] / 100,
-                       fat=params['fat'] / 100,
-                       carbs=params['carbs'] / 100,
-                       protein=params['protein'] / 100)
-    define_unit_for_food(db_session, food, get_gram_unit(db_session), 1.0, True)
+    if params['command_name'] == '/add_food':
+        food = create_food(db_session, locale=i18n.get('locale'),
+                           food_name=params['food_name'],
+                           calories=params['calories'] / 100,
+                           fat=params['fat'] / 100,
+                           carbs=params['carbs'] / 100,
+                           protein=params['protein'] / 100)
+        define_unit_for_food(db_session, food, get_gram_unit(db_session), 1.0, True)
 
-    request_id = params['request']
-    if request_id:
-        request = db_session.query(FoodRequest).get(request_id)
-        if request:
-            # now when food is added, repeat the request
-            messages = food_entry(db_session, request.user, request.request)
-            messages[owner_tid] = i18n.t('Food added') + "\n" + messages[owner_tid]
-            return messages
-    return {user_tid: i18n.t('Food added')}
+        request_id = params['request']
+        if request_id:
+            request = db_session.query(FoodRequest).get(request_id)
+            if request:
+                # now when food is added, repeat the request
+                messages = food_entry(db_session, request.user, request.request)
+                messages[owner_tid] = i18n.t('Food added') + "\n" + messages[owner_tid]
+                return messages
+        return {user_tid: i18n.t('Food added')}
+    else:
+        food.calories = params['calories'] / 100
+        food.fat = params['fat'] / 100
+        food.carbs = params['carbs'] / 100
+        food.protein = params['protein'] / 100
+        db_session.add(food)
+        db_session.commit()
+        return {user_tid: i18n.t('Food updated')}
 
 
 def add_food_command(update: Update, _: CallbackContext) -> None:
