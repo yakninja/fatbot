@@ -22,7 +22,7 @@ def today_command(update: Update, _: CallbackContext) -> None:
     if len(food_logs) == 0:
         strings.append(i18n.t('No entries today'))
     else:
-        strings.append('{}\t{}\t{}\t{}\t{}\t{}'.format(
+        strings.append('{} | {} | {} | {} | {} | {}'.format(
             i18n.t('Time'),
             i18n.t('Food name'),
             i18n.t('Calories'),
@@ -38,7 +38,7 @@ def today_command(update: Update, _: CallbackContext) -> None:
         food = fl.food
         food_name = get_food_name(db_session, food)
         unit_name = get_unit_name(db_session, fl.unit)
-        strings.append('{}\t{} {:.1f} {}\t{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
+        strings.append('{} | {} {:.1f} {} | {:.0f} | {:.2f} | {:.2f} | {:.2f}'.format(
             datetime.utcfromtimestamp(fl.created_at).strftime('%H:%M'),
             food_name,
             fl.qty,
@@ -55,12 +55,12 @@ def today_command(update: Update, _: CallbackContext) -> None:
     strings.append('')
 
     strings.append(i18n.t('Daily remainder:'))
-    strings.append('{}\t{}\t{}\t{}'.format(
+    strings.append('{} | {} | {} | {}'.format(
         i18n.t('Calories'),
         i18n.t('Fat'),
         i18n.t('Carbs'),
         i18n.t('Protein')))
-    strings.append('{:.0f}\t{:.2f}\t{:.2f}\t{:.2f}'.format(
+    strings.append('{:.0f} | {:.2f} | {:.2f} | {:.2f}'.format(
         calories_left,
         fat_left,
         carbs_left,
