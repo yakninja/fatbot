@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import logging
 import os
-from dotenv import load_dotenv
-
 import i18n
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
@@ -17,8 +19,6 @@ i18n.set('filename_format', '{locale}.{format}')
 i18n.set('skip_locale_root_data', True)
 i18n.set('locale', 'ru')
 i18n.set('fallback', 'en')
-
-load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OWNER_TELEGRAM_ID = os.getenv('OWNER_TELEGRAM_ID')
