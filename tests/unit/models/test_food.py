@@ -35,6 +35,7 @@ def test_log_food(db_session, no_food, default_units):
     with do_test_setup(db_session, no_food, default_units):
         assert db_session.query(FoodLog).count() == 0
         user = get_or_create_user(db_session, telegram_id='12345')
+        assert user is not None
         with pytest.raises(FoodNotFound):
             log_food(db_session, locale='en', user=user,
                      food_name='Bread', unit_name='slice', qty=2)

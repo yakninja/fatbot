@@ -82,6 +82,8 @@ def add_unit_command(update: Update, _: CallbackContext) -> None:
     logger.info(info)
 
     user = get_or_create_user(db_session, from_user.id)
+    if user is None:
+        return
     messages = add_unit(db_session, user, update.message.text)
     for tid in messages.keys():
         _.bot.send_message(tid, messages[tid])

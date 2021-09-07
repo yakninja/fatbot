@@ -10,6 +10,8 @@ from models.core import get_or_create_user
 def settings_command(update: Update, _: CallbackContext) -> None:
     db_session = sessionmaker(bind=db_engine)()
     user = get_or_create_user(db_session, update.message.from_user.id)
+    if user is None:
+        return
     profile = user.profile
     strings = [
         i18n.t('Daily goal:'),

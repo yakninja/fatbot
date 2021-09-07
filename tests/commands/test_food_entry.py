@@ -43,6 +43,7 @@ def test_invalid_command(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         assert db_session.query(User).count() == 0
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         messages = food_entry(db_session, user, '')
         tid = str(user.telegram_id)
         assert tid in messages
@@ -61,6 +62,7 @@ def test_non_existing_food(db_session, no_users, no_food, default_units):
         ]
         request_count = 0
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
         for entry in data:
@@ -82,6 +84,7 @@ def test_non_existing_unit(db_session, no_users, no_food, default_units):
         owner_reply = i18n.t('Please add and define new unit')
         create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36, 0.012, 0.035, 0.025)
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
         messages = food_entry(db_session, user,
@@ -100,6 +103,7 @@ def test_undefined_unit(db_session, no_users, no_food, default_units):
         create_food(db_session, i18n.get('locale'), 'Chicken soup', 0.36, 0.012, 0.035, 0.025)
         create_unit(db_session, i18n.get('locale'), 'bowl')
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         user_reply = i18n.t('The food was not found, forwarding request to the owner')
         owner_reply = i18n.t('Please define unit for this food')
         tid = str(user.telegram_id)
@@ -121,6 +125,7 @@ def test_success(db_session, no_users, no_food, default_units):
         unit = create_unit(db_session, i18n.get('locale'), 'bowl')
         define_unit_for_food(db_session, food, unit, 350, False)
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
         messages = food_entry(db_session, user, 'Chicken soup 1 bowl')
@@ -133,6 +138,7 @@ def test_success(db_session, no_users, no_food, default_units):
         assert db_session.query(User).count() == 1
 
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         food_log = db_session.query(FoodLog).one()
         assert food_log.user_id == user.id
         assert food_log.food_id == food.id

@@ -1,3 +1,5 @@
+import os
+
 import i18n
 from sqlalchemy import table, column, Integer, String, insert, func
 from sqlalchemy.exc import NoResultFound, IntegrityError
@@ -85,6 +87,8 @@ def get_or_create_user(db_session: Session, telegram_id) -> User:
     """
     user = db_session.query(User).filter_by(telegram_id=telegram_id).first()
     if not user:
+        if not os.getenv('ALLOW_NEW_USERS', '0').lower() in ['1', 'yes', 'true']:
+            return None
         user = User(telegram_id=telegram_id)
         db_session.add(user)
         db_session.commit()

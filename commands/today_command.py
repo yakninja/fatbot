@@ -14,6 +14,8 @@ def today_command(update: Update, _: CallbackContext) -> None:
     db_session = sessionmaker(bind=db_engine)()
     strings = []
     user = get_or_create_user(db_session, update.message.from_user.id)
+    if user is None:
+        return
     profile = user.profile
     food_logs = db_session.query(FoodLog) \
         .filter_by(user_id=user.id, date=date_now()) \

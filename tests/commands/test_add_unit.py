@@ -41,6 +41,7 @@ def test_invalid_user(db_session, owner_user, default_units):
     with do_test_setup(db_session, owner_user, default_units):
         assert db_session.query(User).count() == 1
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         tid = str(user.telegram_id)
         messages = add_unit(db_session, user, '/add_unit Bowl')
         assert tid in messages

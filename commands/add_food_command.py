@@ -122,6 +122,8 @@ def add_food_command(update: Update, _: CallbackContext) -> None:
     logger.info(info)
 
     user = get_or_create_user(db_session, from_user.id)
+    if user is None:
+        return
     messages = add_food(db_session, user, update.message.text)
     for tid in messages.keys():
         _.bot.send_message(tid, messages[tid])

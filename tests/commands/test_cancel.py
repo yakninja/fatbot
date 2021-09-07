@@ -20,6 +20,7 @@ def test_cancel_last(db_session, no_food, no_users):
     with do_test_setup(db_session, no_food, no_users):
         assert db_session.query(User).count() == 0
         user = get_or_create_user(db_session, 12345)
+        assert user is not None
         tid = str(user.telegram_id)
         owner_id = os.getenv('OWNER_TELEGRAM_ID')
         assert db_session.query(CommandLog).count() == 0

@@ -34,12 +34,21 @@ def db_session(db_credentials):
 
 @pytest.fixture(scope='function')
 def no_users(db_session):
+    os.environ['ALLOW_NEW_USERS'] = '1'
+    db_session.query(User).delete()
+    db_session.commit()
+
+
+@pytest.fixture(scope='function')
+def no_users_disabled(db_session):
+    os.environ['ALLOW_NEW_USERS'] = '0'
     db_session.query(User).delete()
     db_session.commit()
 
 
 @pytest.fixture(scope='function')
 def owner_user(db_session):
+    os.environ['ALLOW_NEW_USERS'] = '1'
     os.environ['OWNER_TELEGRAM_ID'] = '111222333'
     db_session.query(User).delete()
     db_session.commit()

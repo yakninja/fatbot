@@ -77,6 +77,8 @@ def cancel_command(update: Update, _: CallbackContext) -> None:
     _.bot.send_message(owner_tid, info)
 
     user = get_or_create_user(db_session, from_user.id)
+    if user is None:
+        return
     messages = cancel(db_session, user, update.message.text)
     for tid in messages.keys():
         _.bot.send_message(tid, messages[tid])
