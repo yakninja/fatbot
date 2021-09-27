@@ -4,6 +4,7 @@ import os
 import i18n
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from telegram import Update
@@ -11,6 +12,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 from commands import *
 from commands.router import router_command
+
+from jobs import future_message_job
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +59,11 @@ def main() -> None:
 
     # default command: router
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, router_command))
+
+    # jobs
+    job_queue = updater.job_queue
+    for i in range(0, int(os.getenv('FUTURE_MESSAGE_JOBS'))):
+        job_queue.run_repeating(future_message_job, interval=10, first=i)
 
     # Start the Bot
     updater.start_polling()

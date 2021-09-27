@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
 from models import User, UserProfile, FoodUnit, FoodLog, Food, Unit, FoodName, UnitName
+from typing import Optional
 
 
 def create_default_units(session: Session):
@@ -79,7 +80,7 @@ def get_food_by_name(db_session: Session, locale: str, food_name: str) -> Food:
     return db_session.query(FoodName).filter_by(language=locale, name=food_name).one().food
 
 
-def get_or_create_user(db_session: Session, telegram_id) -> User:
+def get_or_create_user(db_session: Session, telegram_id) -> Optional[User]:
     """
     :param db_session:
     :param telegram_id:

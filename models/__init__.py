@@ -2,7 +2,7 @@ from datetime import datetime
 import time
 
 from pytz import timezone
-from sqlalchemy import MetaData, Date, ForeignKey, Boolean, Column, Integer, Float, String
+from sqlalchemy import MetaData, Date, ForeignKey, Boolean, Column, Integer, Float, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -179,3 +179,20 @@ class UserProfile(Base):
 
     def __repr__(self):
         return "<UserProfile(user_id={})>".format(self.user_id)
+
+
+class FutureMessage(Base):
+    __tablename__ = 'future_message'
+
+    id = Column(Integer(), primary_key=True, unique=True, nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
+    created_at = Column(DateTime(), nullable=False)
+    expires_at = Column(DateTime(), nullable=False)
+    send_at = Column(DateTime(), nullable=False)
+    locked_until = Column(DateTime(), nullable=False)
+    message = Column(String(1024), nullable=False)
+
+    user = relationship('User', foreign_keys=user_id)
+
+    def __repr__(self):
+        return "<FutureMessage(id={}, user_id={}, message={})>".format(self.id, self.user_id, self.message)

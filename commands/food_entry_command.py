@@ -153,6 +153,7 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
 
     user = get_or_create_user(db_session, from_user.id)
     if user is None:
+        logger.info("User not found, new users disabled?")
         return
     messages = food_entry(db_session, user, update.message.text)
     for tid in messages.keys():
