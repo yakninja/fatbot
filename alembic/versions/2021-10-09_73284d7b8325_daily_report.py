@@ -17,8 +17,21 @@ depends_on = None
 
 
 def upgrade():
-    pass
+    op.create_table(
+        'daily_report',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('user_id', sa.Integer, nullable=False, unique=True),
+        sa.Column('last_report_date', sa.Date, nullable=False)
+    )
+    op.create_index('idx-daily_report-last_report_date', 'daily_report', ['last_report_date'])
+    op.create_foreign_key(
+        'fk-daily_report-user',
+        'daily_report', 'user',
+        ['user_id'], ['id'],
+        onupdate='restrict',
+        ondelete='cascade'
+    )
 
 
 def downgrade():
-    pass
+    op.drop_table('daily_report')
