@@ -20,6 +20,7 @@ def test_create_user(db_session, no_users):
         assert user is not None
         assert user.id is not None
         assert user.profile is not None
+        assert user.daily_report is not None
         assert user.telegram_id == 12345
         assert user.profile.daily_calories > 0
         assert user.profile.daily_fat > 0

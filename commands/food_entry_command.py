@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from typing import Tuple
 
 import i18n
 from sqlalchemy.exc import NoResultFound
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 FOOD_ENTRY_PATTERN = re.compile('^(.+?)(\\s+([0-9.,/]+)(\\s?[^%]+)?)?\\s*$')
 
 
-def parse_food_entry_message(message: str) -> (str, float, str):
+def parse_food_entry_message(message: str) -> tuple([str, float, str]):
     """
     :param message:
     :return: food_name, qty, unit_name

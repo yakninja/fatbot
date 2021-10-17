@@ -7,6 +7,7 @@ Create Date: 2021-10-09 19:03:59.922742
 """
 from alembic import op
 import sqlalchemy as sa
+from datetime import datetime
 
 
 # revision identifiers, used by Alembic.
@@ -31,6 +32,9 @@ def upgrade():
         onupdate='restrict',
         ondelete='cascade'
     )
+    session = sa.orm.Session(bind=op.get_bind())
+    session.execute('INSERT INTO daily_report(user_id, last_report_date) \
+        SELECT id, :date FROM user', {'date': datetime.today().strftime('%Y-%m-%d')})
 
 
 def downgrade():

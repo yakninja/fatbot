@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session
 
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
-from models import User, UserProfile, FoodUnit, FoodLog, Food, Unit, FoodName, UnitName
+from models import DailyReport, User, UserProfile, FoodUnit, FoodLog, Food, Unit, FoodName, UnitName, date_now
 from typing import Optional
 
 
@@ -94,12 +94,12 @@ def get_or_create_user(db_session: Session, telegram_id) -> Optional[User]:
         db_session.add(user)
         db_session.commit()
         # TODO: configure calories etc. See https://www.calculator.net/macro-calculator.html
-        profile = UserProfile(user_id=user.id,
+        db_session.add(UserProfile(user_id=user.id,
                               daily_calories=1538,
                               daily_carbs=205,
                               daily_fat=44,
-                              daily_protein=94)
-        db_session.add(profile)
+                              daily_protein=94))
+        db_session.add(DailyReport(user_id=user.id, last_report_date=date_now()))
         db_session.commit()
     return user
 
