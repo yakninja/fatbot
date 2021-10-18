@@ -1,20 +1,15 @@
 import logging
-import os
-from multiprocessing import Lock, current_process
-import time
+from multiprocessing import Lock
 
 from sqlalchemy import func, text, and_
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql.functions import concat
 from telegram.ext import CallbackContext
 
 from db import db_engine
 from models import FutureMessage
 
-owner_tid = os.getenv('OWNER_TELEGRAM_ID')
-
 logger = logging.getLogger(__name__)
-mutex = Lock()
+future_message_mutex = Lock()
 
 
 def future_message_job(context: CallbackContext):
@@ -25,7 +20,7 @@ def future_message_job(context: CallbackContext):
     """
     db_session = sessionmaker(bind=db_engine)()
 
-    with mutex:
+    with future_message_mutex:
         """
         Lock messages atomically so other threads won't engage these
         """

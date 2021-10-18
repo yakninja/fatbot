@@ -1,13 +1,19 @@
 import os
+from datetime import timedelta, datetime
+
+from pytz import timezone
 
 import i18n
 from sqlalchemy import table, column, Integer, String, insert, func
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.sqltypes import Date
 
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
 from models import DailyReport, User, UserProfile, FoodUnit, FoodLog, Food, Unit, FoodName, UnitName, date_now
 from typing import Optional
+
+UTC = timezone('UTC')
 
 
 def create_default_units(session: Session):
@@ -95,11 +101,12 @@ def get_or_create_user(db_session: Session, telegram_id) -> Optional[User]:
         db_session.commit()
         # TODO: configure calories etc. See https://www.calculator.net/macro-calculator.html
         db_session.add(UserProfile(user_id=user.id,
-                              daily_calories=1538,
-                              daily_carbs=205,
-                              daily_fat=44,
-                              daily_protein=94))
-        db_session.add(DailyReport(user_id=user.id, last_report_date=date_now()))
+                                   daily_calories=1538,
+                                   daily_carbs=205,
+                                   daily_fat=44,
+                                   daily_protein=94))
+        db_session.add(DailyReport(user_id=user.id,
+                       last_report_date=date_now()))
         db_session.commit()
     return user
 
@@ -127,7 +134,8 @@ def create_unit(db_session: Session, locale: str, unit_name: str) -> Unit:
 
 def define_unit_for_food(db_session: Session, food: Food, unit: Unit, grams: float, is_default: bool) -> None:
     try:
-        fu = db_session.query(FoodUnit).filter_by(food_id=food.id, unit_id=unit.id).one()
+        fu = db_session.query(FoodUnit).filter_by(
+            food_id=food.id, unit_id=unit.id).one()
     except NoResultFound:
         fu = FoodUnit(food_id=food.id, unit_id=unit.id)
     fu.grams = grams
@@ -142,10 +150,12 @@ def define_unit_for_food(db_session: Session, food: Food, unit: Unit, grams: flo
         db_session.commit()
     gram_unit = get_gram_unit(db_session)
     if unit.id != gram_unit.id:
-        fu = db_session.query(FoodUnit).filter_by(food_id=food.id, unit_id=gram_unit.id).first()
+        fu = db_session.query(FoodUnit).filter_by(
+            food_id=food.id, unit_id=gram_unit.id).first()
         if not fu:
             # also add grams
-            fu = FoodUnit(food_id=food.id, unit_id=gram_unit.id, is_default=False, grams=1)
+            fu = FoodUnit(food_id=food.id, unit_id=gram_unit.id,
+                          is_default=False, grams=1)
             db_session.add(fu)
             db_session.commit()
 
@@ -249,7 +259,8 @@ def create_food(db_session: Session, locale: str, food_name: str,
     db_session.commit()
 
     # implicit gram unit
-    food_unit = FoodUnit(food_id=food.id, unit_id=get_gram_unit(db_session).id, grams=1, is_default=True)
+    food_unit = FoodUnit(food_id=food.id, unit_id=get_gram_unit(
+        db_session).id, grams=1, is_default=True)
     db_session.add(food_unit)
     db_session.commit()
 
@@ -295,10 +306,13 @@ def food_log_message(db_session: Session, food_log: FoodLog) -> str:
         func.sum(FoodLog.protein).label('protein')
     ).filter_by(user_id=food_log.user_id, date=food_log.date).first()
 
-    calories_left = "{:.2f}".format(max(0, user_profile.daily_calories - query['calories']))
+    calories_left = "{:.2f}".format(
+        max(0, user_profile.daily_calories - query['calories']))
     fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query['fat']))
-    carbs_left = "{:.2f}".format(max(0, user_profile.daily_carbs - query['carbs']))
-    protein_left = "{:.2f}".format(max(0, user_profile.daily_protein - query['protein']))
+    carbs_left = "{:.2f}".format(
+        max(0, user_profile.daily_carbs - query['carbs']))
+    protein_left = "{:.2f}".format(
+        max(0, user_profile.daily_protein - query['protein']))
 
     food_name = get_food_name(db_session, food_log.food)
     unit_name = get_unit_name(db_session, food_log.unit)
@@ -306,9 +320,44 @@ def food_log_message(db_session: Session, food_log: FoodLog) -> str:
     lines = [
         i18n.t('Food recorded: %{name} %{qty} %{unit}',
                name=food_name, qty='{:.1f}'.format(food_log.qty), unit=unit_name),
-        i18n.t('Calories: %{calories} / %{calories_left}', calories=food_log.calories, calories_left=calories_left),
-        i18n.t('Fat: %{fat} / %{fat_left}', fat=food_log.fat, fat_left=fat_left),
-        i18n.t('Carbs: %{carbs} / %{carbs_left}', carbs=food_log.carbs, carbs_left=carbs_left),
-        i18n.t('Protein: %{protein} / %{protein_left}', protein=food_log.protein, protein_left=protein_left),
+        i18n.t('Calories: %{calories} / %{calories_left}',
+               calories=food_log.calories, calories_left=calories_left),
+        i18n.t('Fat: %{fat} / %{fat_left}',
+               fat=food_log.fat, fat_left=fat_left),
+        i18n.t('Carbs: %{carbs} / %{carbs_left}',
+               carbs=food_log.carbs, carbs_left=carbs_left),
+        i18n.t('Protein: %{protein} / %{protein_left}',
+               protein=food_log.protein, protein_left=protein_left),
     ]
+    return "\n".join(lines)
+
+
+def daily_report_message(db_session: Session, user: User, date: str) -> str:
+    user_profile = user.profile
+    datetime_obj = datetime.strptime(date, '%Y-%m-%d')
+    yesterday_date = (datetime_obj - timedelta(days=1)).strftime('%Y-%m-%d')
+    query = db_session.query(
+        FoodLog.date,
+        func.count().label('count'),
+        func.sum(FoodLog.calories).label('calories'),
+        func.sum(FoodLog.carbs).label('carbs'),
+        func.sum(FoodLog.fat).label('fat'),
+        func.sum(FoodLog.protein).label('protein')
+    ).filter_by(user_id=user.id, date=yesterday_date).first()
+
+    if not query['count']:
+        return None
+
+    calories_left = "{:.2f}".format(
+        max(0, user_profile.daily_calories - query['calories']))
+    fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query['fat']))
+    carbs_left = "{:.2f}".format(
+        max(0, user_profile.daily_carbs - query['carbs']))
+    protein_left = "{:.2f}".format(
+        max(0, user_profile.daily_protein - query['protein']))
+    
+    lines = [
+        i18n.t('Time for your daily statistics!')
+    ]
+
     return "\n".join(lines)

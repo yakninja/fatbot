@@ -189,6 +189,8 @@ class DailyReport(Base):
     user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
     last_report_date = Column(Date(), nullable=False)
 
+    user = relationship('User', foreign_keys=user_id)
+
     def __repr__(self):
         return "<DailyReport(user_id={}, date={})>".format(self.user_id, self.last_report_date)
 
