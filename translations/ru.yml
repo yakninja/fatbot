@@ -44,5 +44,5 @@ Time for your daily statistics!: Время ежедневной статист�
 "Yesterday you consumed:": "Вчера было потреблено:"
 "Calories: %{calories} ({percent}%)": "Калорий: %{calories} (%{percent}%)"
 "Fat: %{fat} (%{percent}%)": "Жиров: %{fat} (%{percent}%)"
-"Carbs: %{carbs} (%{percent}%)": "Углеводов: %{carbs} ({%percent}%)"
+"Carbs: %{carbs} (%{percent}%)": "Углеводов: %{carbs} (%{percent}%)"
 "Protein: %{protein} (%{percent}%)": "Белков: %{protein} (%{percent}%)"
