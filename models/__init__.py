@@ -161,8 +161,10 @@ class User(Base):
     created_at = Column(Integer(), default=time.time, nullable=False)
     updated_at = Column(Integer(), default=time.time, nullable=False)
 
-    profile = relationship('UserProfile', uselist=False, primaryjoin="User.id == UserProfile.user_id")
-    daily_report = relationship('DailyReport', uselist=False, primaryjoin="User.id == DailyReport.user_id")
+    profile = relationship('UserProfile', uselist=False,
+                           primaryjoin="User.id == UserProfile.user_id", back_populates='user')
+    daily_report = relationship('DailyReport', uselist=False,
+                                primaryjoin="User.id == DailyReport.user_id", back_populates='user')
 
     def __repr__(self):
         return "<User(id={} telegram_id={})>".format(self.id, self.telegram_id)
@@ -178,6 +180,9 @@ class UserProfile(Base):
     daily_carbs = Column(Float(), default=0, nullable=False)
     daily_protein = Column(Float(), default=0, nullable=False)
 
+    user = relationship('User', foreign_keys=user_id,
+                        back_populates='profile')
+
     def __repr__(self):
         return "<UserProfile(user_id={})>".format(self.user_id)
 
@@ -189,7 +194,8 @@ class DailyReport(Base):
     user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
     last_report_date = Column(Date(), nullable=False)
 
-    user = relationship('User', foreign_keys=user_id)
+    user = relationship('User', foreign_keys=user_id,
+                        back_populates='daily_report')
 
     def __repr__(self):
         return "<DailyReport(user_id={}, date={})>".format(self.user_id, self.last_report_date)
@@ -210,4 +216,3 @@ class FutureMessage(Base):
 
     def __repr__(self):
         return "<FutureMessage(id={}, user_id={}, message={})>".format(self.id, self.user_id, self.message)
-

@@ -9,6 +9,7 @@ from models.core import create_food, create_unit, daily_report_message, define_u
 
 import i18n
 
+
 @contextmanager
 def do_test_setup(db_session, no_users, no_food, default_units):
     yield
@@ -28,8 +29,8 @@ def test_daily_report(db_session, no_users, no_food, default_units):
             '%Y-%m-%d') == today_date
 
         # no food logged yet
-        assert daily_report_message(
-            db_session=db_session, user=user, date=today_date) is None
+        assert daily_report_message(db_session=db_session,
+                                    user=user, date=today_date) is None
 
         apple_food = create_food(db_session, 'en', 'Apple',
                                  calories=0.52, fat=0.002, carbs=0.14, protein=0.003)

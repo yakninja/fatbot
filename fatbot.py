@@ -13,7 +13,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 from commands import *
 from commands.router import router_command
 
-from jobs import future_message_job
+from jobs import future_message_job, daily_report_job
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,8 @@ def main() -> None:
     job_queue = updater.job_queue
     for i in range(0, int(os.getenv('FUTURE_MESSAGE_JOBS'))):
         job_queue.run_repeating(future_message_job, interval=10, first=i)
+    
+    job_queue.run_repeating(daily_report_job, interval=60, first=0)
 
     # Start the Bot
     updater.start_polling()

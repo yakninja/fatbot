@@ -333,6 +333,17 @@ def food_log_message(db_session: Session, food_log: FoodLog) -> str:
 
 
 def daily_report_message(db_session: Session, user: User, date: str) -> str:
+    """
+    Daily report example:
+    ===
+    Time for your daily statistics!
+    Yesterday you consumed:
+    Calories: 1234 (85%)
+    Fat: 123 g (95%)
+    Carbs: 234 g (120%)
+    Protein: 10 g (9%)
+    ===
+    """
     user_profile = user.profile
     datetime_obj = datetime.strptime(date, '%Y-%m-%d')
     yesterday_date = (datetime_obj - timedelta(days=1)).strftime('%Y-%m-%d')
@@ -348,16 +359,26 @@ def daily_report_message(db_session: Session, user: User, date: str) -> str:
     if not query['count']:
         return None
 
-    calories_left = "{:.2f}".format(
-        max(0, user_profile.daily_calories - query['calories']))
-    fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query['fat']))
-    carbs_left = "{:.2f}".format(
-        max(0, user_profile.daily_carbs - query['carbs']))
-    protein_left = "{:.2f}".format(
-        max(0, user_profile.daily_protein - query['protein']))
-    
+    calories_percent = 0 if not user_profile.daily_calories \
+        else round(query['calories'] * 100.0 / user_profile.daily_calories)
+    fat_percent = 0 if not user_profile.daily_fat \
+        else round(query['fat'] * 100.0 / user_profile.daily_fat)
+    carbs_percent = 0 if not user_profile.daily_carbs \
+        else round(query['carbs'] * 100.0 / user_profile.daily_carbs)
+    protein_percent = 0 if not user_profile.daily_protein \
+        else round(query['protein'] * 100.0 / user_profile.daily_protein)
+
     lines = [
-        i18n.t('Time for your daily statistics!')
+        i18n.t('Time for your daily statistics!'),
+        i18n.t('Yesterday you consumed:'),
+        i18n.t('Calories: {calories} ({percent}%)',
+               calories=round(query['calories']), percent=calories_percent),
+        i18n.t('Fat: {fat} ({percent}%)',
+               fat=round(query['fat']), percent=fat_percent),
+        i18n.t('Carbs: {carbs} ({percent}%)',
+               carbs=round(query['carbs']), percent=carbs_percent),
+        i18n.t('Protein: {protein} ({percent}%)',
+               protein=round(query['protein']), percent=protein_percent),
     ]
 
     return "\n".join(lines)
