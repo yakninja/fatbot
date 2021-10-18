@@ -371,13 +371,13 @@ def daily_report_message(db_session: Session, user: User, date: str) -> str:
     lines = [
         i18n.t('Time for your daily statistics!'),
         i18n.t('Yesterday you consumed:'),
-        i18n.t('Calories: {calories} ({percent}%)',
+        i18n.t('Calories: %{calories} (%{percent}%)',
                calories=round(query['calories']), percent=calories_percent),
-        i18n.t('Fat: {fat} ({percent}%)',
+        i18n.t('Fat: %{fat} (%{percent}%)',
                fat=round(query['fat']), percent=fat_percent),
-        i18n.t('Carbs: {carbs} ({percent}%)',
+        i18n.t('Carbs: %{carbs} (%{percent}%)',
                carbs=round(query['carbs']), percent=carbs_percent),
-        i18n.t('Protein: {protein} ({percent}%)',
+        i18n.t('Protein: %{protein} (%{percent}%)',
                protein=round(query['protein']), percent=protein_percent),
     ]
 

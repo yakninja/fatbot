@@ -6,7 +6,7 @@ weight %{weight}: weight %{weight}
 "Command cancelled: %{command}": "Command cancelled: %{command}"
 Time for your daily statistics!: Time for your daily statistics!
 "Yesterday you consumed:": "Yesterday you consumed:"
-"Calories: {calories} ({percent}%)": "Calories: {calories} ({percent}%)"
-"Fat: {fat} ({percent}%)": "Fat: {fat} ({percent}%)"
-"Carbs: {carbs} ({percent}%)": "Carbs: {carbs} ({percent}%)"
-"Protein: {protein} ({percent}%)": "Protein: {protein} ({percent}%)"
+"Calories: %{calories} (%{percent}%)": "Calories: %{calories} (%{percent}%)"
+"Fat: %{fat} (%{percent}%)": "Fat: %{fat} (%{percent}%)"
+"Carbs: %{carbs} (%{percent}%)": "Carbs: %{carbs} (%{percent}%)"
+"Protein: %{protein} (%{percent}%)": "Protein: %{protein} (%{percent}%)"
