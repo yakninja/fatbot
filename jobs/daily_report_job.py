@@ -16,11 +16,6 @@ from models.core import daily_report_message
 logger = logging.getLogger(__name__)
 daily_report_mutex = Lock()
 
-i18n.load_path.append('./translations')
-i18n.set('filename_format', '{locale}.{format}')
-i18n.set('skip_locale_root_data', True)
-i18n.set('locale', 'ru')
-i18n.set('fallback', 'en')
 
 def daily_report_job(context: CallbackContext=None, db_session=None):
     """

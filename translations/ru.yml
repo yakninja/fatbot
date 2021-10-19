@@ -42,7 +42,7 @@ today: сегодня
 Nothing to cancel: Нечего отменять
 Time for your daily statistics!: Время ежедневной статистики!
 "Yesterday you consumed:": "Вчера было потреблено:"
-"Calories: %{calories} ({percent}%)": "Калорий: %{calories} (%{percent}%)"
+"Calories: %{calories} (%{percent}%)": "Калорий: %{calories} (%{percent}%)"
 "Fat: %{fat} (%{percent}%)": "Жиров: %{fat} (%{percent}%)"
 "Carbs: %{carbs} (%{percent}%)": "Углеводов: %{carbs} (%{percent}%)"
 "Protein: %{protein} (%{percent}%)": "Белков: %{protein} (%{percent}%)"
