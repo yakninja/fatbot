@@ -49,7 +49,7 @@ def daily_report_job(context: CallbackContext=None, db_session=None):
                 created_at=func.now(),
                 locked_until=func.now(),
                 expires_at=text('date_add(now(), interval 1 day)'),
-                send_at='{} 10:00:00'.format(today_date), # todo: user's timezone
+                send_at='{} 07:00:00'.format(today_date), # todo: user's timezone
                 message=message
             )
             db_session.add(fm)
