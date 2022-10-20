@@ -22,7 +22,7 @@ def get_weight_entry_pattern():
     This depends on locale
     :return:
     """
-    return re.compile('^(/weight|{})\\s+([0-9.,]+)$'.format(i18n.t('weight')), re.I)
+    return re.compile('^((/weight|{})\\s+)?([0-9.,]+)$'.format(i18n.t('weight')), re.I)
 
 
 def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
@@ -39,7 +39,7 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     if not m:
         return invalid_reply
     try:
-        weight = float(m.groups()[1].strip().replace(',', '.'))
+        weight = float(m.groups()[2].strip().replace(',', '.'))
         if weight <= 0:
             return invalid_reply
     except (IndexError, AttributeError):

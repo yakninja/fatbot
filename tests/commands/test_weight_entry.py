@@ -1,4 +1,5 @@
 import os
+import time
 from contextlib import contextmanager
 
 import i18n
@@ -55,6 +56,10 @@ def test_valid_command(db_session, no_users):
             (i18n.t('weight %{weight}', weight=10.7), 10.7,
              i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
                     weight=10.7, delta='-59.4', per_day='-8.49')),
+
+            ("20.8", 20.8,
+             i18n.t('Weight recorded: %{weight} (%{delta}, %{per_day} per day)',
+                    weight=20.8, delta='+10.1', per_day='+1.44')),
         ]
 
         log_count = 1
@@ -74,3 +79,11 @@ def test_valid_command(db_session, no_users):
             log_count += 1
             db_session.execute("""UPDATE weight_log SET created_at = created_at - 86400 * 7""")
             db_session.commit()
+
+        db_session.execute("""DELETE FROM weight_log""")
+        db_session.commit()
+
+        
+        month_ago = time.time() - 86400 * 30
+        week_ago = time.time() - 86400 * 7
+        day_ago = time.time() - 86400
