@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 daily_report_mutex = Lock()
 
 
-def daily_report_job(context: ContextTypes.DEFAULT_TYPE = None, db_session=None):
+async def daily_report_job(context: ContextTypes.DEFAULT_TYPE = None, db_session=None):
     """
     Select users for daily reporting, queue reports for them
     :param context: optional, not used ATM
