@@ -1,0 +1,23 @@
+[Unit]
+Description=fatbot
+After=network.target
+
+[Service]
+User=yakninja
+WorkingDirectory=/home/yakninja/fatbot
+EnvironmentFile=/home/yakninja/fatbot/.env
+SyslogIdentifier=fatbot
+
+# StandardOutput works for systemd v.240+ only (check with systemd -v)
+# for older versions, add this to /etc/rsyslog.d/fatbot.conf:
+# if $programname == 'fatbot' then /home/yakninja/fatbot/logs/output.log & stop
+# then create the file and chown it to syslog
+
+StandardOutput=file:/home/yakninja/fatbot/logs/output.log
+StandardError=file:/home/yakninja/fatbot/logs/error.log
+ExecStart=/home/yakninja/fatbot/.venv/bin/python /home/yakninja/fatbot/fatbot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

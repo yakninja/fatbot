@@ -53,3 +53,17 @@ alembic downgrade -1
 - `pipenv install --dev`
 - `alembic upgrade head`
 - `pytest`
+
+
+### Service
+
+- `cp .env.example .env`
+- `nano .env`
+- `sudo cp fatbot.service.example /etc/systemd/system/fatbot.service`
+- `sudo nano /etc/systemd/system/fatbot.service`
+- `sudo systemctl daemon-reload`
+- `sudo systemctl start fatbot`
+- `sudo systemctl enable fatbot`
+- `sudo visudo`
+- add `yakninja ALL=(ALL:ALL) NOPASSWD: /bin/systemctl start fatbot, /bin/systemctl stop fatbot, /bin/systemctl restart fatbot`
+- create `logs` directory and setup logrotate for `logs/fatbot.log`
