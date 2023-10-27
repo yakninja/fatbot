@@ -141,6 +141,34 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
         axes[0].set_xticks([df_month['created_at'].iloc[0],
                            df_month['created_at'].iloc[-1]])
 
+    # Adding a trend line for the 1-month data
+    if len(df_month) > 1:  # Need at least two points for a trend line
+        # Converting datetime to numerical for linear regression
+        x = np.array([md.toordinal() for md in df_month['created_at']])
+        y = df_month['weight']
+
+        # Calculate coefficients for the linear trend line (y = mx + b)
+        m, b = np.polyfit(x, y, 1)
+
+        # Generate y-values based on the linear equation
+        trend_line = m * x + b
+
+        # Calculate the trend value (weight change)
+        trend_value = trend_line[-1] - trend_line[0]
+
+        # Convert numerical x-values back to datetime for plotting
+        trend_dates = [datetime.fromordinal(int(i)) for i in x]
+
+        # Plot the trend line
+        trend_color = 'red' if trend_value >= 0 else 'green'
+        axes[0].plot(trend_dates, trend_line,
+                     linestyle='--', color=trend_color)
+
+        # Annotate the plot with the trend value
+        trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
+        axes[0].text(0.02, 0.95, trend_text, transform=axes[0].transAxes,
+                     fontsize=8, verticalalignment='top')
+
     # Plot weight change over 1 year
     # [left, bottom, width, height]
     axes[1].set_position([0.08, 0.1, 0.9, 0.3])  # Move it lower

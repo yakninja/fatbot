@@ -66,4 +66,4 @@ alembic downgrade -1
 - `sudo systemctl enable fatbot`
 - `sudo visudo`
 - add `yakninja ALL=(ALL:ALL) NOPASSWD: /bin/systemctl start fatbot, /bin/systemctl stop fatbot, /bin/systemctl restart fatbot`
-- create `logs` directory and setup logrotate for `logs/fatbot.log`
+- see logs with `journalctl -f -u fatbot`
