@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-from sqlalchemy import orm
+from sqlalchemy import orm, text
 
 revision = '6611998d6983'
 down_revision = '26d1bf16fc84'
@@ -29,12 +29,12 @@ def upgrade():
     session.execute("SET optimizer_switch = 'derived_merge=off'")
 
     # delete duplicate names
-    session.execute("""DELETE FROM food_name fn
+    session.execute(text("""DELETE FROM food_name fn
     WHERE fn.id NOT IN(SELECT * FROM(SELECT max(id) FROM food_name fn2
-        WHERE fn2.name = fn.name AND fn2.language = fn2.language) x)""")
-    session.execute("""DELETE FROM unit_name un
+        WHERE fn2.name = fn.name AND fn2.language = fn2.language) x)"""))
+    session.execute(text("""DELETE FROM unit_name un
     WHERE un.id NOT IN(SELECT * FROM(SELECT max(id) FROM unit_name un2
-        WHERE un2.name = un.name AND un2.language = un2.language) x)""")
+        WHERE un2.name = un.name AND un2.language = un2.language) x)"""))
     session.commit()
 
     op.create_unique_constraint('uq-food_name-name-language', 'food_name',

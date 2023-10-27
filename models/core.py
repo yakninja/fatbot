@@ -8,6 +8,7 @@ from sqlalchemy import table, column, Integer, String, insert, func
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.sqltypes import Date
+from sqlalchemy.sql import text
 
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
 from models import DailyReport, User, UserProfile, FoodUnit, FoodLog, Food, Unit, FoodName, UnitName, date_now
@@ -144,8 +145,8 @@ def define_unit_for_food(db_session: Session, food: Food, unit: Unit, grams: flo
     db_session.commit()  # flush?
     if fu.is_default:
         # remove default from other units
-        db_session.execute("""UPDATE food_unit SET is_default = :false 
-            WHERE food_id = :food_id AND unit_id <> :unit_id""",
+        db_session.execute(text("""UPDATE food_unit SET is_default = :false
+            WHERE food_id = :food_id AND unit_id <> :unit_id"""),
                            {'false': False, 'food_id': food.id, 'unit_id': unit.id})
         db_session.commit()
     gram_unit = get_gram_unit(db_session)
@@ -307,12 +308,12 @@ def food_log_message(db_session: Session, food_log: FoodLog) -> str:
     ).filter_by(user_id=food_log.user_id, date=food_log.date).first()
 
     calories_left = "{:.2f}".format(
-        max(0, user_profile.daily_calories - query['calories']))
-    fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query['fat']))
+        max(0, user_profile.daily_calories - query.calories))
+    fat_left = "{:.2f}".format(max(0, user_profile.daily_fat - query.fat))
     carbs_left = "{:.2f}".format(
-        max(0, user_profile.daily_carbs - query['carbs']))
+        max(0, user_profile.daily_carbs - query.carbs))
     protein_left = "{:.2f}".format(
-        max(0, user_profile.daily_protein - query['protein']))
+        max(0, user_profile.daily_protein - query.protein))
 
     food_name = get_food_name(db_session, food_log.food)
     unit_name = get_unit_name(db_session, food_log.unit)
@@ -356,29 +357,29 @@ def daily_report_message(db_session: Session, user: User, date: str) -> str:
         func.sum(FoodLog.protein).label('protein')
     ).filter_by(user_id=user.id, date=yesterday_date).first()
 
-    if not query['count']:
+    if query is not None and query.count == 0:
         return None
 
     calories_percent = 0 if not user_profile.daily_calories \
-        else round(query['calories'] * 100.0 / user_profile.daily_calories)
+        else round(query.calories * 100.0 / user_profile.daily_calories)
     fat_percent = 0 if not user_profile.daily_fat \
-        else round(query['fat'] * 100.0 / user_profile.daily_fat)
+        else round(query.fat * 100.0 / user_profile.daily_fat)
     carbs_percent = 0 if not user_profile.daily_carbs \
-        else round(query['carbs'] * 100.0 / user_profile.daily_carbs)
+        else round(query.carbs * 100.0 / user_profile.daily_carbs)
     protein_percent = 0 if not user_profile.daily_protein \
-        else round(query['protein'] * 100.0 / user_profile.daily_protein)
+        else round(query.protein * 100.0 / user_profile.daily_protein)
 
     lines = [
         i18n.t('Time for your daily statistics!'),
         i18n.t('Yesterday you consumed:'),
         i18n.t('Calories: %{calories} (%{percent}%)',
-               calories=round(query['calories']), percent=calories_percent),
+               calories=round(query.calories), percent=calories_percent),
         i18n.t('Fat: %{fat} (%{percent}%)',
-               fat=round(query['fat']), percent=fat_percent),
+               fat=round(query.fat), percent=fat_percent),
         i18n.t('Carbs: %{carbs} (%{percent}%)',
-               carbs=round(query['carbs']), percent=carbs_percent),
+               carbs=round(query.carbs), percent=carbs_percent),
         i18n.t('Protein: %{protein} (%{percent}%)',
-               protein=round(query['protein']), percent=protein_percent),
+               protein=round(query.protein), percent=protein_percent),
     ]
 
     return "\n".join(lines)

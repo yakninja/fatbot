@@ -5,6 +5,7 @@ from contextlib import contextmanager
 
 import i18n
 from sqlalchemy import desc
+from sqlalchemy.sql import text
 
 from commands.weight_entry_command import weight_entry
 from models import User, WeightLog
@@ -90,10 +91,10 @@ def test_valid_command(db_session, no_users):
             assert weight_log.weight == weight
             log_count += 1
             db_session.execute(
-                """UPDATE weight_log SET created_at = created_at - 86400 * 7""")
+                text("""UPDATE weight_log SET created_at = created_at - 86400 * 7"""))
             db_session.commit()
 
-        db_session.execute("""DELETE FROM weight_log""")
+        db_session.execute(text("""DELETE FROM weight_log"""))
         db_session.commit()
 
         month_ago = time.time() - 86400 * 30

@@ -6,14 +6,14 @@ import i18n
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from commands.food_entry_command import food_entry
 from db import db_engine
 from models import FoodRequest, User, FoodUnit
 from models.core import get_food_by_name, define_unit_for_food, get_gram_unit, get_or_create_user, \
     get_unit_by_name
-from parser import ArgumentParser, str2bool
+from argumentparser import ArgumentParser, str2bool
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def define_unit(db_session: Session, user: User, input_message: str) -> dict:
 
     request_id = params['request']
     if request_id:
-        request = db_session.query(FoodRequest).get(request_id)
+        request = db_session.get(FoodRequest, request_id)
         if request:
             # now when unit is defined, repeat the request
             messages = food_entry(db_session, request.user, request.request)
@@ -90,14 +90,14 @@ def define_unit(db_session: Session, user: User, input_message: str) -> dict:
     return {user_tid: i18n.t('Unit defined')}
 
 
-def define_unit_command(update: Update, _: CallbackContext) -> None:
+async def define_unit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Define unit command (only for owner)
     /define_unit "Food name" "Unit name" --grams=... --request=...
     Food name, unit name and grams are required, the rest values are optional
 
     :param update:
-    :param _:
+    :param context:
     :return:
     """
     db_session = sessionmaker(bind=db_engine)()
@@ -111,4 +111,4 @@ def define_unit_command(update: Update, _: CallbackContext) -> None:
         return
     messages = define_unit(db_session, user, update.message.text)
     for tid in messages.keys():
-        _.bot.send_message(tid, messages[tid])
+        await context.bot.send_message(tid, messages[tid])

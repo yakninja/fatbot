@@ -7,7 +7,7 @@ import i18n
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from db import db_engine
 from exc import FoodNotFound, UnitNotFound, UnitNotDefined
@@ -137,11 +137,11 @@ def food_entry(db_session: Session, user: User, input_message: str) -> dict:
     }
 
 
-def food_entry_command(update: Update, _: CallbackContext) -> None:
+async def food_entry_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Process food entry, echo it to the owner for debugging
     :param update:
-    :param _:
+    :param context:
     :return:
     """
     db_session = sessionmaker(bind=db_engine)()
@@ -150,7 +150,7 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
 
     info = "{} {}: {}".format(from_user.id, from_user.username, update.message.text)
     logger.info(info)
-    _.bot.send_message(owner_tid, info)
+    await context.bot.send_message(owner_tid, info)
 
     user = get_or_create_user(db_session, from_user.id)
     if user is None:
@@ -158,4 +158,4 @@ def food_entry_command(update: Update, _: CallbackContext) -> None:
         return
     messages = food_entry(db_session, user, update.message.text)
     for tid in messages.keys():
-        _.bot.send_message(tid, messages[tid])
+        await context.bot.send_message(tid, messages[tid])

@@ -6,13 +6,13 @@ import i18n
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from commands.food_entry_command import food_entry
 from db import db_engine
 from models import FoodRequest, User
 from models.core import get_food_by_name, create_food, define_unit_for_food, get_gram_unit, get_or_create_user
-from parser import ArgumentParser
+from argumentparser import ArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ def add_food(db_session: Session, user: User, input_message: str) -> dict:
 
         request_id = params['request']
         if request_id:
-            request = db_session.query(FoodRequest).get(request_id)
+            request = db_session.get(FoodRequest, request_id)
             if request:
                 # now when food is added, repeat the request
                 messages = food_entry(db_session, request.user, request.request)
@@ -104,7 +104,7 @@ def add_food(db_session: Session, user: User, input_message: str) -> dict:
         return {user_tid: i18n.t('Food updated')}
 
 
-def add_food_command(update: Update, _: CallbackContext) -> None:
+async def add_food_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Add food command (only for owner ATM). Calories etc are per 100 g
     /add_food "Food name" --calories=... --fat=... --carbs=... --protein=...
@@ -112,7 +112,7 @@ def add_food_command(update: Update, _: CallbackContext) -> None:
     Food name and calories are required, the rest values are optional
 
     :param update:
-    :param _:
+    :param context:
     :return:
     """
     db_session = sessionmaker(bind=db_engine)()
@@ -126,4 +126,4 @@ def add_food_command(update: Update, _: CallbackContext) -> None:
         return
     messages = add_food(db_session, user, update.message.text)
     for tid in messages.keys():
-        _.bot.send_message(tid, messages[tid])
+        await context.bot.send_message(tid, messages[tid])

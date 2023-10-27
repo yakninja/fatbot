@@ -12,6 +12,7 @@ def do_test_setup(db_session, no_users):
 
 def test_router(db_session, no_users):
     with do_test_setup(db_session, no_users):
+        assert i18n.t('weight %{weight}', weight=50.5) == 'weight 50.5'
         data = [
             # weight entry
             ('/weight {}'.format(50.5), weight_entry_command),
@@ -36,4 +37,4 @@ def test_router(db_session, no_users):
             (i18n.t('Cancel'), cancel_command),
         ]
         for row in data:
-            assert row[1] == router(row[0])
+            assert row[1] == router(row[0]), 'Failed for {}'.format(row[0])

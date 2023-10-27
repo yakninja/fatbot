@@ -3,8 +3,7 @@ import time
 
 from pytz import timezone
 from sqlalchemy import MetaData, Date, ForeignKey, Boolean, Column, Integer, Float, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base(metadata=MetaData())
 UTC = timezone('UTC')

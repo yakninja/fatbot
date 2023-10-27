@@ -1,13 +1,13 @@
 import i18n
 from sqlalchemy.orm import sessionmaker
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from db import db_engine
 from models.core import get_or_create_user
 
 
-def settings_command(update: Update, _: CallbackContext) -> None:
+async def settings_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     db_session = sessionmaker(bind=db_engine)()
     user = get_or_create_user(db_session, update.message.from_user.id)
     if user is None:

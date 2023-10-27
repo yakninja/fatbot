@@ -1,10 +1,10 @@
 "Received: %{message}": "Received: %{message}"
-/weight %{weight}: weight %{weight}
-weight %{weight}: weight %{weight}
+"/weight %{weight}": weight %{weight}
+"weight %{weight}": weight %{weight}
 "Weight recorded: %{weight}": "Weight recorded: %{weight}"
 "Weight recorded: %{weight} (%{delta}, %{per_day} per day)": "Weight recorded: %{weight} (%{delta}, %{per_day} per day)"
 "Command cancelled: %{command}": "Command cancelled: %{command}"
-Time for your daily statistics!: Time for your daily statistics!
+"Time for your daily statistics!": Time for your daily statistics!
 "Yesterday you consumed:": "Yesterday you consumed:"
 "Calories: %{calories} (%{percent}%)": "Calories: %{calories} (%{percent}%)"
 "Fat: %{fat} (%{percent}%)": "Fat: %{fat} (%{percent}%)"

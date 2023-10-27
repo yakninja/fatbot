@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+alembic = "*"
+mysqlclient = "*"
+openai = "*"
+setuptools = "*"
+python-dotenv = "*"
+pytz = "*"
+sqlalchemy = "*"
+python-telegram-bot = {version = "*", extras = ["job-queue"]}
+matplotlib = "*"
+python-i18n = "*"
+pandas = "*"
+scipy = "*"
+pyyaml = "*"
+
+[dev-packages]
+pytest = "*"
+autopep8 = "*"
+
+[requires]
+python_version = "3.10"

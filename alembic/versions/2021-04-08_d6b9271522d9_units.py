@@ -109,8 +109,8 @@ def upgrade():
                     }
                 )
             )
-        session.execute("""UPDATE food_log SET unit_id = :unit_id
-            WHERE food_id = :food_id""",
+        session.execute(text("""UPDATE food_log SET unit_id = :unit_id
+            WHERE food_id = :food_id"""),
                         {
                             'unit_id': gram_unit_id
                             if f['default_unit'] == 'g'

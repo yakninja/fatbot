@@ -3,7 +3,7 @@ from multiprocessing import Lock
 
 from sqlalchemy import func, text, and_
 from sqlalchemy.orm import sessionmaker
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from db import db_engine
 from models import FutureMessage
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 future_message_mutex = Lock()
 
 
-def future_message_job(context: CallbackContext):
+async def future_message_job(context: ContextTypes.DEFAULT_TYPE):
     """
     Select all message queued for sending, send them
     :param context:
@@ -24,7 +24,7 @@ def future_message_job(context: CallbackContext):
         """
         Lock messages atomically so other threads won't engage these
         """
-        db_session.execute('DELETE FROM future_message WHERE expires_at < now()')
+        db_session.execute(text('DELETE FROM future_message WHERE expires_at < now()'))
         db_session.commit()
 
         messages = db_session.query(FutureMessage) \

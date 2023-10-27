@@ -2,7 +2,7 @@ import re
 
 import i18n
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from commands import weight_entry_command, food_entry_command, today_command, cancel_command
 from commands.weight_entry_command import get_weight_entry_pattern
@@ -24,6 +24,6 @@ def router(command: str):
     return food_entry_command
 
 
-def router_command(update: Update, _: CallbackContext) -> None:
+async def router_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     func = router(update.message.text)
-    return func(update, _)
+    return await func(update, context)

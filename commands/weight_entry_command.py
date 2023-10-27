@@ -8,7 +8,7 @@ import i18n
 from sqlalchemy import desc, asc, and_, or_
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -126,7 +126,15 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     else:
         axes[0].plot(df_month['created_at'], df_month['weight'])
     axes[0].set_title('Month')
-    axes[0].set_ylim([df_month['weight'].min(), df_month['weight'].max()])
+    # Get the minimum and maximum values of the weight data for 1 month
+    min_weight_month = df_month['weight'].min()
+    max_weight_month = df_month['weight'].max()
+    if min_weight_month == max_weight_month:
+        # If they are equal, set the y-limits to a fixed range or adjust as needed
+        fixed_range = 10.0  # Set a fixed range, you can adjust this value
+        axes[0].set_ylim(min_weight_month - fixed_range/2, max_weight_month + fixed_range/2)
+    else:
+        axes[0].set_ylim([df_month['weight'].min(), df_month['weight'].max()])
 
     # Simplify x-axis to show only first and last date
     if len(df_month) > 0:
@@ -138,7 +146,18 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     axes[1].set_position([0.08, 0.1, 0.9, 0.3])  # Move it lower
     axes[1].plot(df_year['created_at'], df_year['weight'])
     axes[1].set_title('Year')
-    axes[1].set_ylim([df_year['weight'].min(), df_year['weight'].max()])
+    # Get the minimum and maximum values of the weight data for 1 year
+    min_weight_year = df_year['weight'].min()
+    max_weight_year = df_year['weight'].max()
+
+    # Check if the minimum and maximum values are equal
+    if min_weight_year == max_weight_year:
+        # If they are equal, set the y-limits to a fixed range or adjust as needed
+        fixed_range = 10.0  # Set a fixed range, you can adjust this value
+        axes[1].set_ylim(min_weight_year - fixed_range/2, max_weight_year + fixed_range/2)
+    else:
+        # If they are not equal, use the min and max values as originally intended
+        axes[1].set_ylim(min_weight_year, max_weight_year)
     # Simplify x-axis to show only first and last date
     if len(df_year) > 0:
         axes[1].set_xticks([df_year['created_at'].iloc[0],
@@ -182,7 +201,7 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     }
 
 
-def weight_entry_command(update: Update, _: CallbackContext) -> None:
+async def weight_entry_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Process weight entry, echo it to the owner for debugging
     :param update:
@@ -196,13 +215,13 @@ def weight_entry_command(update: Update, _: CallbackContext) -> None:
     info = "{} {}: {}".format(
         from_user.id, from_user.username, update.message.text)
     logger.info(info)
-    _.bot.send_message(owner_tid, info)
+    await context.bot.send_message(owner_tid, info)
 
     user = get_or_create_user(db_session, from_user.id)
     if user is None:
         return
     messages = weight_entry(db_session, user, update.message.text)
     for tid in messages.keys():
-        _.bot.send_message(tid, messages[tid]['message'])
+        await context.bot.send_message(tid, messages[tid]['message'])
         with open(messages[tid]['plot_file'], 'rb') as f:
-            _.bot.send_photo(tid, f)
+            await context.bot.send_photo(tid, f)

@@ -1,9 +1,9 @@
 import i18n
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 
-def help_command(update: Update, _: CallbackContext) -> None:
+async def help_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Usage
     :param update:
@@ -41,4 +41,4 @@ def help_command(update: Update, _: CallbackContext) -> None:
         '',
         '/settings',
     ]
-    update.message.reply_text("\n".join(help_strings))
+    await update.message.reply_text("\n".join(help_strings))

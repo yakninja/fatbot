@@ -7,9 +7,10 @@ or whatever.
 
 - `pip install virtualenv`
 - `cd /path/to/project`  
-- `virtualenv venv`
-- `source venv/bin/activate`
-- `pip install -r requirements.txt`
+- `virtualenv .venv --python=python3.10`
+- `source .venv/bin/activate`
+- `pip install pipenv`
+- `pipenv install`
     "UserWarning: Unknown distribution option: 'descriptions'" when installing uwsgi?
     `LDFLAGS=-fno-lto pip install uwsgi`, then repeat
 - `export TELEGRAM_TOKEN=...`
@@ -49,7 +50,6 @@ alembic downgrade -1
 
 ### Testing
 
-- `pip install -r requirements-dev.txt`
-- `export DB_PORT=3307`
+- `pipenv install --dev`
 - `alembic upgrade head`
 - `pytest`

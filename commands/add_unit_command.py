@@ -7,7 +7,7 @@ import i18n
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from commands.food_entry_command import food_entry
 from db import db_engine
@@ -15,7 +15,7 @@ from exc import FoodNotFound
 from models import UnitName, Unit, FoodName, Food, FoodUnit, FoodRequest, User
 from models.core import log_food, get_food_by_name, create_food, define_unit_for_food, get_gram_unit, \
     get_or_create_user, get_unit_by_name, create_unit
-from parser import ArgumentParser
+from argumentparser import ArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +67,12 @@ def add_unit(db_session: Session, user: User, input_message: str) -> dict:
     return {user_tid: i18n.t('Unit added')}
 
 
-def add_unit_command(update: Update, _: CallbackContext) -> None:
+async def add_unit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Add unit command (only for owner)
     /add_unit "Unit name"
     :param update:
-    :param _:
+    :param context:
     :return:
     """
     db_session = sessionmaker(bind=db_engine)()
@@ -86,4 +86,4 @@ def add_unit_command(update: Update, _: CallbackContext) -> None:
         return
     messages = add_unit(db_session, user, update.message.text)
     for tid in messages.keys():
-        _.bot.send_message(tid, messages[tid])
+        await context.bot.send_message(tid, messages[tid])

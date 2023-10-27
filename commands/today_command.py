@@ -3,14 +3,14 @@ from datetime import datetime
 import i18n
 from sqlalchemy.orm import sessionmaker
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from db import db_engine
 from models import date_now, FoodLog
 from models.core import get_or_create_user, get_food_name, get_unit_name
 
 
-def today_command(update: Update, _: CallbackContext) -> None:
+def today_command(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     db_session = sessionmaker(bind=db_engine)()
     strings = []
     user = get_or_create_user(db_session, update.message.from_user.id)

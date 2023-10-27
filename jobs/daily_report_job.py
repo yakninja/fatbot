@@ -7,7 +7,7 @@ import i18n
 from sqlalchemy import func, text, and_
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.functions import concat, current_date
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
 from db import db_engine
 from models import DailyReport, FutureMessage, date_now
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 daily_report_mutex = Lock()
 
 
-def daily_report_job(context: CallbackContext=None, db_session=None):
+def daily_report_job(context: ContextTypes.DEFAULT_TYPE = None, db_session=None):
     """
     Select users for daily reporting, queue reports for them
     :param context: optional, not used ATM
@@ -49,7 +49,8 @@ def daily_report_job(context: CallbackContext=None, db_session=None):
                 created_at=func.now(),
                 locked_until=func.now(),
                 expires_at=text('date_add(now(), interval 1 day)'),
-                send_at='{} 07:00:00'.format(today_date), # todo: user's timezone
+                send_at='{} 07:00:00'.format(
+                    today_date),  # todo: user's timezone
                 message=message
             )
             db_session.add(fm)
