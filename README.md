@@ -23,7 +23,7 @@ or whatever.
 
 ### docker?
 
-- `docker-compose exec mysql mysql -uroot -proot`
+- `docker compose exec mysql mysql -uroot -proot`
 - `CREATE USER 'fatbot'@'192.168.%' IDENTIFIED BY 'fatbot';`
 - `GRANT ALL ON fatbot.* to fatbot@'192.168.%';`
 

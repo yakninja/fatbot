@@ -133,3 +133,5 @@ dmypy.json
 /fatbot.sh
 .DS_Store
 .vscode
+
+temp

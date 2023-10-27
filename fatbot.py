@@ -36,6 +36,7 @@ def main() -> None:
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
     )
+
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(TELEGRAM_TOKEN)
@@ -64,7 +65,7 @@ def main() -> None:
     job_queue = updater.job_queue
     for i in range(0, int(os.getenv('FUTURE_MESSAGE_JOBS'))):
         job_queue.run_repeating(future_message_job, interval=10, first=i)
-    
+
     job_queue.run_repeating(daily_report_job, interval=60, first=0)
 
     # Start the Bot

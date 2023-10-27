@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 from contextlib import contextmanager
 
@@ -8,10 +9,13 @@ from sqlalchemy import desc
 from commands.weight_entry_command import weight_entry
 from models import User, WeightLog
 from models.core import get_or_create_user
+from utils import TEMP_PATH
 
 
 @contextmanager
 def do_test_setup(db_session, no_users):
+    if os.path.exists(TEMP_PATH):
+        shutil.rmtree(TEMP_PATH)
     yield
 
 
@@ -31,7 +35,8 @@ def test_invalid_command(db_session, no_users):
         for entry in invalid:
             messages = weight_entry(db_session, user, entry)
             assert tid in messages
-            assert messages[tid] == i18n.t('I don\'t understand')
+            assert 'message' in messages[tid]
+            assert messages[tid]['message'] == i18n.t('I don\'t understand')
 
 
 def test_valid_command(db_session, no_users):
@@ -70,20 +75,27 @@ def test_valid_command(db_session, no_users):
             messages = weight_entry(db_session, user, command)
             assert tid in messages
             assert owner_id in messages
-            assert messages[tid] == reply
-            assert messages[owner_id] == reply
+            assert 'message' in messages[tid]
+            assert 'message' in messages[owner_id]
+            assert 'plot_file' in messages[tid]
+            assert 'plot_file' in messages[owner_id]
+            assert messages[tid]['message'] == reply
+            assert messages[owner_id]['message'] == reply
+            assert os.path.exists(messages[tid]['plot_file'])
+            assert os.path.exists(messages[owner_id]['plot_file'])
             assert db_session.query(WeightLog).count() == log_count
-            weight_log = db_session.query(WeightLog).order_by(desc('id')).first()
+            weight_log = db_session.query(
+                WeightLog).order_by(desc('id')).first()
             assert weight_log.user_id == user.id
             assert weight_log.weight == weight
             log_count += 1
-            db_session.execute("""UPDATE weight_log SET created_at = created_at - 86400 * 7""")
+            db_session.execute(
+                """UPDATE weight_log SET created_at = created_at - 86400 * 7""")
             db_session.commit()
 
         db_session.execute("""DELETE FROM weight_log""")
         db_session.commit()
 
-        
         month_ago = time.time() - 86400 * 30
         week_ago = time.time() - 86400 * 7
         day_ago = time.time() - 86400
