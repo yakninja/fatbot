@@ -87,7 +87,7 @@ def upgrade():
     session = orm.Session(bind=op.get_bind())
     gram_unit_id, pc_unit_id = create_default_units(session=session)
 
-    for f in session.execute('SELECT * FROM food'):
+    for f in session.execute(text("SELECT * FROM food")):
         session.execute(
             insert(food_unit).values(
                 {
