@@ -1,7 +1,7 @@
 """init
 
 Revision ID: 33b1774e5345
-Revises: 
+Revises:
 Create Date: 2021-03-21 10:01:47.564249
 
 """

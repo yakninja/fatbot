@@ -26,7 +26,7 @@ def upgrade():
     session = orm.Session(bind=op.get_bind())
 
     # otherwise we risk getting "You can't specify target table for update in FROM clause"
-    session.execute("SET optimizer_switch = 'derived_merge=off'")
+    session.execute(text("SET optimizer_switch = 'derived_merge=off'"))
 
     # delete duplicate names
     session.execute(text("""DELETE FROM food_name fn
