@@ -8,7 +8,7 @@ def get_db_url():
         os.getenv("DB_USER", "fatbot"),
         os.getenv("DB_PASSWORD", "fatbot"),
         os.getenv("DB_HOST", "127.0.0.1"),
-        os.getenv("DB_PORT", "3306"),
+        os.getenv("DB_PORT", "3307"),
         os.getenv("DB_NAME", "fatbot"),
     )
 
