@@ -17,7 +17,8 @@ def do_test_setup(db_session, no_users, no_food, default_units):
     yield
 
 
-def test_daily_report(db_session, no_users, no_food, default_units):
+@pytest.mark.asyncio
+async def test_daily_report(db_session, no_users, no_food, default_units):
     with do_test_setup(db_session, no_users, no_food, default_units):
         assert len(db_session.query(User).all()) == 0
         assert len(db_session.query(FutureMessage).all()) == 0
@@ -37,7 +38,7 @@ def test_daily_report(db_session, no_users, no_food, default_units):
         user.daily_report.last_report_date = yesterday_date
         db_session.add(user.daily_report)
         db_session.commit()
-         
+
         user = get_or_create_user(db_session, telegram_id='12345')
         assert user.daily_report.last_report_date.strftime(
             '%Y-%m-%d') == yesterday_date
@@ -46,7 +47,7 @@ def test_daily_report(db_session, no_users, no_food, default_units):
 
         # no food logged yet
 
-        daily_report_job(db_session=db_session)
+        await daily_report_job(db_session=db_session)
         assert len(db_session.query(FutureMessage).all()) == 0
         # last_report_date will reset to current date after this
         user.daily_report.last_report_date = yesterday_date
@@ -60,7 +61,7 @@ def test_daily_report(db_session, no_users, no_food, default_units):
                  date=today_date)
 
         # no food logged yesterday
-        daily_report_job(db_session=db_session)
+        await daily_report_job(db_session=db_session)
         assert len(db_session.query(FutureMessage).all()) == 0
         # last_report_date will reset to current date after this
         user.daily_report.last_report_date = yesterday_date
@@ -75,5 +76,5 @@ def test_daily_report(db_session, no_users, no_food, default_units):
         report_message = daily_report_message(
             db_session=db_session, user=user, date=today_date)
         assert report_message is not None
-        daily_report_job(db_session=db_session)
+        await daily_report_job(db_session=db_session)
         assert len(db_session.query(FutureMessage).all()) == 1

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5c7db66f3a615a87313183f3604c7d728d01df8e84ae52630dd509241b8427f3"
+            "sha256": "2707e48f0cabf5405ee83852adbe9496d973283e4cd43c26e45a2ec1ac3327ff"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -830,7 +830,7 @@
                 "sha256:e44ccb93f30c75dfc0c3aa3ce38f33486a75ec9abadabd4e59f114994a9c4617",
                 "sha256:e509cbc488c735b43b5ffea175235cec24bbc57b227ef1acc691725beb230d1c"
             ],
-            "markers": "python_version < '3.13' and python_version >= '3.9'",
+            "markers": "python_version < '3.11'",
             "version": "==1.26.1"
         },
         "openai": {
@@ -1351,6 +1351,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==7.4.3"
+        },
+        "pytest-asyncio": {
+            "hashes": [
+                "sha256:40a7eae6dded22c7b604986855ea48400ab15b069ae38116e8c01238e9eeb64d",
+                "sha256:8666c1c8ac02631d7c51ba282e0c69a8a452b211ffedf2599099845da5c5c37b"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==0.21.1"
         },
         "tomli": {
             "hashes": [
