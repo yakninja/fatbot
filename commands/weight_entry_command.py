@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 
 import i18n
+from matplotlib.axes import Axes
 from sqlalchemy import desc, asc, and_, or_
 from sqlalchemy.orm import sessionmaker, Session
 from telegram import Update
@@ -31,6 +32,29 @@ def get_weight_entry_pattern():
     :return:
     """
     return re.compile('^((/weight|{})\\s+)?([0-9.,]+)$'.format(i18n.t('weight')), re.I)
+
+def plot_data(ax: Axes, df: pd.DataFrame, title: str):
+    ax.plot(df['created_at'], df['weight'])
+    ax.set_title(title)
+    min_weight = df['weight'].min()
+    max_weight = df['weight'].max()
+    ax.set_ylim([min_weight if min_weight != max_weight else min_weight - 5,
+                 max_weight if min_weight != max_weight else max_weight + 5])
+
+    if len(df) > 0:
+        ax.set_xticks([df['created_at'].iloc[0], df['created_at'].iloc[-1]])
+
+    if len(df) > 1:
+        x = np.array([md.toordinal() for md in df['created_at']])
+        y = df['weight']
+        m, b = np.polyfit(x, y, 1)
+        trend_line = m * x + b
+        trend_value = trend_line[-1] - trend_line[0]
+        trend_dates = [datetime.fromordinal(int(i)) for i in x]
+        trend_color = 'red' if trend_value >= 0 else 'green'
+        ax.plot(trend_dates, trend_line, linestyle='--', color=trend_color)
+        trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
+        ax.text(0.02, 0.95, trend_text, transform=ax.transAxes, fontsize=8, verticalalignment='top')
 
 
 def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
@@ -79,17 +103,14 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     matplotlib.use('Agg') # non-interactive backend
 
     # Get data for the plot
-
     current_time = datetime.now()
     current_timestamp = int(current_time.timestamp())
+    one_week_ago = current_timestamp - 86400 * 7
     one_month_ago = current_timestamp - 86400 * 30
     one_year_ago = current_timestamp - 86400 * 365
     query = db_session.query(WeightLog.created_at, WeightLog.weight).filter(
-        and_(
-            WeightLog.user_id == user.id,
-            or_(WeightLog.created_at >= one_month_ago,
-                WeightLog.created_at >= one_year_ago)
-        )
+        WeightLog.user_id == user.id,
+        WeightLog.created_at >= one_year_ago  # Fetch records from one year ago up to the current time
     ).order_by(asc('created_at'))
 
     # Convert the query result to a DataFrame
@@ -99,125 +120,29 @@ def weight_entry(db_session: Session, user: User, input_message: str) -> dict:
     df['created_at'] = pd.to_datetime(df['created_at'], unit='s')
 
     # Convert Unix timestamps back to datetime objects for filtering
+    one_week_ago_datetime = datetime.fromtimestamp(one_week_ago)
     one_month_ago_datetime = datetime.fromtimestamp(one_month_ago)
     one_year_ago_datetime = datetime.fromtimestamp(one_year_ago)
 
     # Filter the DataFrame
+    df_week = df[df['created_at'] >= one_week_ago_datetime]
     df_month = df[df['created_at'] >= one_month_ago_datetime]
     df_year = df[df['created_at'] >= one_year_ago_datetime]
 
-    # Now plot the data
+    # Create a figure with size 800x600 pixels
+    fig, axes = plt.subplots(3, 1, figsize=(8, 6), dpi=100)
 
-    # Create a figure with size 800x400 pixels
-    fig, axes = plt.subplots(2, 1, figsize=(8, 4), dpi=100)
+    # Plot for week
+    plot_data(axes[0], df_week, 'Week')
 
-    # Plot weight change over 1 month
-    # [left, bottom, width, height]
-    axes[0].set_position([0.08, 0.6, 0.9, 0.3])
-    # (look into it later)
-    if False and len(df_month) > 3:  # Need at least four points for cubic spline
-        x = np.array([md.toordinal() for md in df_month['created_at']])
-        y = df_month['weight']
-        spl = UnivariateSpline(x, y, k=3, s=0)
-        xnew = np.linspace(x.min(), x.max(), 800)
-        ynew = spl(xnew)
-        trend_dates = [datetime.fromordinal(int(i)) for i in xnew]
-        axes[0].plot(trend_dates, ynew)
-    else:
-        axes[0].plot(df_month['created_at'], df_month['weight'])
-    axes[0].set_title('Month')
-    # Get the minimum and maximum values of the weight data for 1 month
-    min_weight_month = df_month['weight'].min()
-    max_weight_month = df_month['weight'].max()
-    if min_weight_month == max_weight_month:
-        # If they are equal, set the y-limits to a fixed range or adjust as needed
-        fixed_range = 10.0  # Set a fixed range, you can adjust this value
-        axes[0].set_ylim(min_weight_month - fixed_range/2, max_weight_month + fixed_range/2)
-    else:
-        axes[0].set_ylim([df_month['weight'].min(), df_month['weight'].max()])
+    # Plot for month
+    plot_data(axes[1], df_month, 'Month')
 
-    # Simplify x-axis to show only first and last date
-    if len(df_month) > 0:
-        axes[0].set_xticks([df_month['created_at'].iloc[0],
-                           df_month['created_at'].iloc[-1]])
+    # Plot for year
+    plot_data(axes[2], df_year, 'Year')
 
-    # Adding a trend line for the 1-month data
-    if len(df_month) > 1:  # Need at least two points for a trend line
-        # Converting datetime to numerical for linear regression
-        x = np.array([md.toordinal() for md in df_month['created_at']])
-        y = df_month['weight']
-
-        # Calculate coefficients for the linear trend line (y = mx + b)
-        m, b = np.polyfit(x, y, 1)
-
-        # Generate y-values based on the linear equation
-        trend_line = m * x + b
-
-        # Calculate the trend value (weight change)
-        trend_value = trend_line[-1] - trend_line[0]
-
-        # Convert numerical x-values back to datetime for plotting
-        trend_dates = [datetime.fromordinal(int(i)) for i in x]
-
-        # Plot the trend line
-        trend_color = 'red' if trend_value >= 0 else 'green'
-        axes[0].plot(trend_dates, trend_line,
-                     linestyle='--', color=trend_color)
-
-        # Annotate the plot with the trend value
-        trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
-        axes[0].text(0.02, 0.95, trend_text, transform=axes[0].transAxes,
-                     fontsize=8, verticalalignment='top')
-
-    # Plot weight change over 1 year
-    # [left, bottom, width, height]
-    axes[1].set_position([0.08, 0.1, 0.9, 0.3])  # Move it lower
-    axes[1].plot(df_year['created_at'], df_year['weight'])
-    axes[1].set_title('Year')
-    # Get the minimum and maximum values of the weight data for 1 year
-    min_weight_year = df_year['weight'].min()
-    max_weight_year = df_year['weight'].max()
-
-    # Check if the minimum and maximum values are equal
-    if min_weight_year == max_weight_year:
-        # If they are equal, set the y-limits to a fixed range or adjust as needed
-        fixed_range = 10.0  # Set a fixed range, you can adjust this value
-        axes[1].set_ylim(min_weight_year - fixed_range/2, max_weight_year + fixed_range/2)
-    else:
-        # If they are not equal, use the min and max values as originally intended
-        axes[1].set_ylim(min_weight_year, max_weight_year)
-    # Simplify x-axis to show only first and last date
-    if len(df_year) > 0:
-        axes[1].set_xticks([df_year['created_at'].iloc[0],
-                           df_year['created_at'].iloc[-1]])
-
-    # Adding a trend line for the 1-year data
-    if len(df_year) > 1:  # Need at least two points for a trend line
-        # Converting datetime to numerical for linear regression
-        x = np.array([md.toordinal() for md in df_year['created_at']])
-        y = df_year['weight']
-
-        # Calculate coefficients for the linear trend line (y = mx + b)
-        m, b = np.polyfit(x, y, 1)
-
-        # Generate y-values based on the linear equation
-        trend_line = m * x + b
-
-        # Calculate the trend value (weight change)
-        trend_value = trend_line[-1] - trend_line[0]
-
-        # Convert numerical x-values back to datetime for plotting
-        trend_dates = [datetime.fromordinal(int(i)) for i in x]
-
-        # Plot the trend line
-        trend_color = 'red' if trend_value >= 0 else 'green'
-        axes[1].plot(trend_dates, trend_line,
-                     linestyle='--', color=trend_color)
-
-        # Annotate the plot with the trend value
-        trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
-        axes[1].text(0.02, 0.95, trend_text, transform=axes[1].transAxes,
-                     fontsize=8, verticalalignment='top')
+    # Adjust subplots
+    fig.subplots_adjust(hspace=0.4, left=0.08, right=0.9, top=0.95, bottom=0.05)
 
     # Save the figure
     plot_filename = get_temp_filename('png')
