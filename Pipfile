@@ -17,6 +17,7 @@ python-i18n = "*"
 pandas = "*"
 scipy = "*"
 pyyaml = "*"
+Pillow = ">=10.2.0"
 
 [dev-packages]
 pytest = "*"
