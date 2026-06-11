@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 from contextlib import contextmanager
 
 import i18n
@@ -78,12 +77,16 @@ def test_valid_command(db_session, no_users):
             assert owner_id in messages
             assert 'message' in messages[tid]
             assert 'message' in messages[owner_id]
-            assert 'plot_file' in messages[tid]
-            assert 'plot_file' in messages[owner_id]
             assert messages[tid]['message'] == reply
             assert messages[owner_id]['message'] == reply
-            assert os.path.exists(messages[tid]['plot_file'])
-            assert os.path.exists(messages[owner_id]['plot_file'])
+            if log_count == 1:
+                assert 'plot_file' not in messages[tid]
+                assert 'plot_file' not in messages[owner_id]
+            else:
+                assert 'plot_file' in messages[tid]
+                assert 'plot_file' in messages[owner_id]
+                assert os.path.exists(messages[tid]['plot_file'])
+                assert os.path.exists(messages[owner_id]['plot_file'])
             assert db_session.query(WeightLog).count() == log_count
             weight_log = db_session.query(
                 WeightLog).order_by(desc('id')).first()
@@ -96,7 +99,3 @@ def test_valid_command(db_session, no_users):
 
         db_session.execute(text("""DELETE FROM weight_log"""))
         db_session.commit()
-
-        month_ago = time.time() - 86400 * 30
-        week_ago = time.time() - 86400 * 7
-        day_ago = time.time() - 86400
