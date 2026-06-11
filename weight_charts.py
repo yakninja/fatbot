@@ -17,6 +17,10 @@ MIN_CHART_POINTS = 2
 FIGURE_WIDTH_INCHES = 8
 CHART_HEIGHT_INCHES = 2
 FIGURE_DPI = 100
+MAIN_LINE_WIDTH = 2.0
+TREND_LINE_WIDTH = 1.4
+Y_AXIS_PADDING_RATIO = 0.12
+MIN_Y_AXIS_PADDING = 0.35
 
 
 def get_weight_chart_ranges(df: pd.DataFrame, current_time: datetime) -> list:
@@ -52,14 +56,25 @@ def get_smoothed_weight_line(df: pd.DataFrame):
     return mdates.num2date(smooth_x), smooth_y
 
 
+def get_weight_axis_limits(raw_weights, line_weights):
+    weights = np.concatenate([
+        np.asarray(raw_weights, dtype=float),
+        np.asarray(line_weights, dtype=float),
+    ])
+    min_weight = weights.min()
+    max_weight = weights.max()
+    if min_weight == max_weight:
+        return min_weight - 5, max_weight + 5
+
+    padding = max((max_weight - min_weight) * Y_AXIS_PADDING_RATIO, MIN_Y_AXIS_PADDING)
+    return min_weight - padding, max_weight + padding
+
+
 def plot_data(ax: Axes, df: pd.DataFrame, title: str):
     line_dates, line_weights = get_smoothed_weight_line(df)
-    ax.plot(line_dates, line_weights)
+    ax.plot(line_dates, line_weights, linewidth=MAIN_LINE_WIDTH)
     ax.set_title(title)
-    min_weight = df['weight'].min()
-    max_weight = df['weight'].max()
-    ax.set_ylim([min_weight if min_weight != max_weight else min_weight - 5,
-                 max_weight if min_weight != max_weight else max_weight + 5])
+    ax.set_ylim(get_weight_axis_limits(df['weight'], line_weights))
 
     ax.set_xticks([df['created_at'].iloc[0], df['created_at'].iloc[-1]])
 
@@ -70,7 +85,7 @@ def plot_data(ax: Axes, df: pd.DataFrame, title: str):
     trend_value = trend_line[-1] - trend_line[0]
     trend_dates = mdates.num2date(x)
     trend_color = 'red' if trend_value >= 0 else 'green'
-    ax.plot(trend_dates, trend_line, linestyle='--', color=trend_color)
+    ax.plot(trend_dates, trend_line, linestyle='--', color=trend_color, linewidth=TREND_LINE_WIDTH)
     trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
     ax.text(0.02, 0.95, trend_text, transform=ax.transAxes, fontsize=8, verticalalignment='top')
 

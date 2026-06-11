@@ -6,6 +6,7 @@ from weight_charts import (
     CHART_HEIGHT_INCHES,
     close_weight_chart_figure,
     create_weight_chart_figure,
+    get_weight_axis_limits,
     get_smoothed_weight_line,
     get_weight_chart_ranges,
 )
@@ -58,3 +59,10 @@ def test_weight_line_is_smoothed_when_enough_points_are_available():
 
     assert len(line_dates) > len(df)
     assert len(line_weights) == len(line_dates)
+
+
+def test_weight_axis_limits_include_padding_around_rendered_line():
+    low, high = get_weight_axis_limits([70, 72], [69.5, 73])
+
+    assert low < 69.5
+    assert high > 73

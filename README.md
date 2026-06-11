@@ -2,7 +2,7 @@
 
 ## Install
 
-You need Python 3.10 and mysqlclient build dependencies installed.
+You need Python 3.12 and mysqlclient build dependencies installed.
 
 Ubuntu:
 
@@ -19,7 +19,7 @@ export PKG_CONFIG_PATH="$(brew --prefix mysql-client)/lib/pkgconfig"
 ```
 
 - `cd /path/to/project`  
-- `python3.10 -m venv .venv`
+- `python3.12 -m venv .venv`
 - `source .venv/bin/activate`
 - `python -m pip install --upgrade pip`
 - `python -m pip install -r requirements.txt`
@@ -66,7 +66,7 @@ alembic downgrade -1
 
 ### Testing
 
-- `python3.10 -m venv .venv`
+- `python3.12 -m venv .venv`
 - `source .venv/bin/activate`
 - `python -m pip install --upgrade pip`
 - `python -m pip install -r requirements-dev.txt`
