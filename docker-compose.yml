@@ -1,6 +1,20 @@
-version: '3.2'
-
 services:
+  app:
+    build: .
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN:-}
+      - OWNER_TELEGRAM_ID=${OWNER_TELEGRAM_ID:-}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=fatbot
+      - DB_USER=fatbot
+      - DB_PASSWORD=fatbot
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/app
+    command: python fatbot.py
+
   mysql:
     ports:
       - 3306:3306

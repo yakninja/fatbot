@@ -8,8 +8,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      PIPENV_VENV_IN_PROJECT: "1"
 
     services:
       mysql:
@@ -30,32 +28,21 @@ jobs:
       with:
         python-version: "3.10"
         cache: pip
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config default-libmysqlclient-dev
-    - name: Install Pipenv
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pipenv
-    - name: Verify lockfile
-      run: pipenv verify
-    - name: Cache Pipenv virtualenv
-      uses: actions/cache@v4
-      id: pipenv-cache
-      with:
-        path: .venv
-        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-pipenv-
-    - name: Install dependencies
-      run: |
-        pipenv sync --dev
-      if: steps.pipenv-cache.outputs.cache-hit != 'true'
+        python -m pip install -r requirements-dev.txt
     - name: Run tests
       run: |
-        pipenv run alembic upgrade head
-        pipenv run pytest
+        alembic upgrade head
+        pytest
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:
@@ -65,8 +52,9 @@ jobs:
         script: |
           cd /home/yakninja/fatbot
           git pull
-          export PIPENV_VENV_IN_PROJECT=1
-          pipenv verify
-          pipenv sync
-          pipenv run alembic upgrade head
+          python3 -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          alembic upgrade head
           sudo $(which systemctl) restart fatbot

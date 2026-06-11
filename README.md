@@ -2,17 +2,27 @@
 
 ## Install
 
-You need mysqlclient installed. `sudo apt-get install libmysqlclient-dev` or `brew install mysql-client`
-or whatever.
+You need Python 3.10 and mysqlclient build dependencies installed.
 
-- `pip install virtualenv`
+Ubuntu:
+
+```
+sudo apt-get install build-essential pkg-config default-libmysqlclient-dev
+```
+
+macOS:
+
+```
+brew install mysql-client pkg-config
+export PATH="$(brew --prefix mysql-client)/bin:$PATH"
+export PKG_CONFIG_PATH="$(brew --prefix mysql-client)/lib/pkgconfig"
+```
+
 - `cd /path/to/project`  
-- `virtualenv .venv --python=python3.10`
+- `python3.10 -m venv .venv`
 - `source .venv/bin/activate`
-- `pip install pipenv`
-- `pipenv install`
-    "UserWarning: Unknown distribution option: 'descriptions'" when installing uwsgi?
-    `LDFLAGS=-fno-lto pip install uwsgi`, then repeat
+- `python -m pip install --upgrade pip`
+- `python -m pip install -r requirements.txt`
 - `export TELEGRAM_TOKEN=...`
 - `export OWNER_TELEGRAM_ID=...`
 - `export DB_HOST=127.0.0.1`
@@ -22,7 +32,13 @@ or whatever.
 - `alembic upgrade head`
 - `python fatbot.py`
 
-### docker?
+### Docker
+
+- `cp .env.example .env`
+- `nano .env`
+- `docker compose up --build app`
+
+Useful database shell:
 
 - `docker compose exec mysql mysql -uroot -proot`
 - `CREATE USER 'fatbot'@'192.168.%' IDENTIFIED BY 'fatbot';`
@@ -50,7 +66,10 @@ alembic downgrade -1
 
 ### Testing
 
-- `pipenv install --dev`
+- `python3.10 -m venv .venv`
+- `source .venv/bin/activate`
+- `python -m pip install --upgrade pip`
+- `python -m pip install -r requirements-dev.txt`
 - `alembic upgrade head`
 - `pytest`
 
