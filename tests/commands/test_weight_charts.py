@@ -73,6 +73,7 @@ def test_weight_chart_renders_date_labels_with_legend():
     now = datetime(2026, 6, 11, 12)
     df = weight_df(now, [2, 0])
     date_labels = [
+        SimpleNamespace(label_date=now.date(), label='Old'),
         SimpleNamespace(label_date=now.date(), label='Start'),
     ]
 
@@ -80,8 +81,10 @@ def test_weight_chart_renders_date_labels_with_legend():
 
     try:
         ax = fig.axes[0]
-        assert any(line.get_linestyle() == ':' for line in ax.get_lines())
-        legend_text = [text.get_text() for text in ax.get_legend().get_texts()]
+        assert sum(1 for line in ax.get_lines() if line.get_linestyle() == ':') == 1
+        legend = ax.get_legend()
+        legend_text = [text.get_text() for text in legend.get_texts()]
         assert legend_text == ['2026-06-11: Start']
+        assert all(not handle.get_visible() for handle in legend.legend_handles)
     finally:
         close_weight_chart_figure(fig)

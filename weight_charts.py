@@ -84,14 +84,14 @@ def get_visible_date_labels(date_labels, df: pd.DataFrame):
 
     chart_start_date = pd.to_datetime(df['created_at'].iloc[0]).date()
     chart_end_date = pd.to_datetime(df['created_at'].iloc[-1]).date()
-    visible_date_labels = []
+    visible_date_labels_by_date = {}
 
     for date_label in date_labels:
         label_date = pd.to_datetime(get_date_label_attr(date_label, 'label_date')).date()
         if chart_start_date <= label_date <= chart_end_date:
-            visible_date_labels.append(date_label)
+            visible_date_labels_by_date[label_date] = date_label
 
-    return visible_date_labels
+    return list(visible_date_labels_by_date.values())
 
 
 def plot_date_labels(ax: Axes, date_labels, df: pd.DataFrame):
@@ -111,7 +111,15 @@ def plot_date_labels(ax: Axes, date_labels, df: pd.DataFrame):
             label=legend_label,
         )
 
-    ax.legend(loc='upper right', fontsize=7, frameon=False)
+    legend = ax.legend(
+        loc='upper right',
+        fontsize=7,
+        frameon=False,
+        handlelength=0,
+        handletextpad=0,
+    )
+    for handle in legend.legend_handles:
+        handle.set_visible(False)
 
 
 def plot_data(ax: Axes, df: pd.DataFrame, title: str, date_labels=None):

@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 
 import i18n
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -80,11 +81,16 @@ def add_date_label(db_session: Session, user: User, date_string: str, label: str
             }
         }
 
-    date_label = db_session.query(DateLabel).filter_by(
+    date_labels = db_session.query(DateLabel).filter_by(
         user_id=user.id,
         label_date=label_date,
-    ).first()
-    if not date_label:
+    ).order_by(desc(DateLabel.updated_at), desc(DateLabel.id)).all()
+
+    if date_labels:
+        date_label = date_labels[0]
+        for duplicate_date_label in date_labels[1:]:
+            db_session.delete(duplicate_date_label)
+    else:
         date_label = DateLabel(user_id=user.id, label_date=label_date)
 
     date_label.label = label
@@ -106,20 +112,21 @@ def remove_date_label(db_session: Session, user: User, date_string: str) -> dict
     except ValueError:
         return {str(user.telegram_id): {'message': i18n.t('I don\'t understand')}}
 
-    date_label = db_session.query(DateLabel).filter_by(
+    date_labels = db_session.query(DateLabel).filter_by(
         user_id=user.id,
         label_date=label_date,
-    ).first()
+    ).order_by(desc(DateLabel.updated_at), desc(DateLabel.id)).all()
 
-    if not date_label:
+    if not date_labels:
         message = i18n.t(
             'No date label found for %{date}',
             date=label_date.strftime(DATE_FORMAT),
         )
         return date_label_replies(db_session, user, message)
 
-    label = date_label.label
-    db_session.delete(date_label)
+    label = date_labels[0].label
+    for date_label in date_labels:
+        db_session.delete(date_label)
     db_session.commit()
 
     message = i18n.t(

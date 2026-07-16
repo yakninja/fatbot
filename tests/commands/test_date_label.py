@@ -51,13 +51,28 @@ def test_add_and_remove_date_label_redraw_charts(db_session, no_users):
         assert os.path.exists(messages[tid]['plot_file'])
         assert os.path.exists(messages[owner_id]['plot_file'])
 
+        messages = date_label(db_session, user, '/label {} Workout'.format(label_date))
+
+        assert db_session.query(DateLabel).count() == 1
+        saved_label = db_session.query(DateLabel).one()
+        assert saved_label.user_id == user.id
+        assert saved_label.label_date.strftime('%Y-%m-%d') == label_date
+        assert saved_label.label == 'Workout'
+        assert messages[tid]['message'] == i18n.t(
+            'Date label saved: %{date} %{label}',
+            date=label_date,
+            label='Workout',
+        )
+        assert os.path.exists(messages[tid]['plot_file'])
+        assert os.path.exists(messages[owner_id]['plot_file'])
+
         messages = date_label(db_session, user, '/unlabel {}'.format(label_date))
 
         assert db_session.query(DateLabel).count() == 0
         assert messages[tid]['message'] == i18n.t(
             'Date label removed: %{date} %{label}',
             date=label_date,
-            label='Vacation',
+            label='Workout',
         )
         assert os.path.exists(messages[tid]['plot_file'])
         assert os.path.exists(messages[owner_id]['plot_file'])

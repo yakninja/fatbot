@@ -53,7 +53,7 @@ def create_user_weight_chart(db_session: Session, user: User, current_time: date
         DateLabel.user_id == user.id,
         DateLabel.label_date >= one_year_ago_date,
         DateLabel.label_date <= current_time.date(),
-    ).order_by(DateLabel.label_date).all()
+    ).order_by(DateLabel.label_date, DateLabel.updated_at, DateLabel.id).all()
 
     fig = create_weight_chart_figure(get_weight_chart_ranges(df, current_time), date_labels)
     if not fig:
