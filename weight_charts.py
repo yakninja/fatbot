@@ -19,6 +19,8 @@ CHART_HEIGHT_INCHES = 2
 FIGURE_DPI = 100
 MAIN_LINE_WIDTH = 2.0
 TREND_LINE_WIDTH = 1.4
+DATE_LABEL_LINE_WIDTH = 1.2
+DATE_LABEL_COLOR = 'dimgray'
 Y_AXIS_PADDING_RATIO = 0.12
 MIN_Y_AXIS_PADDING = 0.35
 
@@ -70,7 +72,49 @@ def get_weight_axis_limits(raw_weights, line_weights):
     return min_weight - padding, max_weight + padding
 
 
-def plot_data(ax: Axes, df: pd.DataFrame, title: str):
+def get_date_label_attr(date_label, attr):
+    if isinstance(date_label, dict):
+        return date_label[attr]
+    return getattr(date_label, attr)
+
+
+def get_visible_date_labels(date_labels, df: pd.DataFrame):
+    if not date_labels:
+        return []
+
+    chart_start_date = pd.to_datetime(df['created_at'].iloc[0]).date()
+    chart_end_date = pd.to_datetime(df['created_at'].iloc[-1]).date()
+    visible_date_labels = []
+
+    for date_label in date_labels:
+        label_date = pd.to_datetime(get_date_label_attr(date_label, 'label_date')).date()
+        if chart_start_date <= label_date <= chart_end_date:
+            visible_date_labels.append(date_label)
+
+    return visible_date_labels
+
+
+def plot_date_labels(ax: Axes, date_labels, df: pd.DataFrame):
+    visible_date_labels = get_visible_date_labels(date_labels, df)
+    if not visible_date_labels:
+        return
+
+    for date_label in visible_date_labels:
+        label_date = pd.to_datetime(get_date_label_attr(date_label, 'label_date')).to_pydatetime()
+        label = get_date_label_attr(date_label, 'label')
+        legend_label = '{}: {}'.format(label_date.strftime('%Y-%m-%d'), label)
+        ax.axvline(
+            label_date,
+            linestyle=':',
+            color=DATE_LABEL_COLOR,
+            linewidth=DATE_LABEL_LINE_WIDTH,
+            label=legend_label,
+        )
+
+    ax.legend(loc='upper right', fontsize=7, frameon=False)
+
+
+def plot_data(ax: Axes, df: pd.DataFrame, title: str, date_labels=None):
     line_dates, line_weights = get_smoothed_weight_line(df)
     ax.plot(line_dates, line_weights, linewidth=MAIN_LINE_WIDTH)
     ax.set_title(title)
@@ -88,9 +132,10 @@ def plot_data(ax: Axes, df: pd.DataFrame, title: str):
     ax.plot(trend_dates, trend_line, linestyle='--', color=trend_color, linewidth=TREND_LINE_WIDTH)
     trend_text = f"Trend: {'+' if trend_value >= 0 else ''}{trend_value:.2f}"
     ax.text(0.02, 0.95, trend_text, transform=ax.transAxes, fontsize=8, verticalalignment='top')
+    plot_date_labels(ax, date_labels, df)
 
 
-def create_weight_chart_figure(chart_ranges: list):
+def create_weight_chart_figure(chart_ranges: list, date_labels=None):
     if not chart_ranges:
         return None
 
@@ -105,7 +150,7 @@ def create_weight_chart_figure(chart_ranges: list):
         axes = [axes]
 
     for ax, (title, chart_df) in zip(axes, chart_ranges):
-        plot_data(ax, chart_df, title)
+        plot_data(ax, chart_df, title, date_labels)
 
     return fig
 

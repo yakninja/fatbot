@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -66,3 +67,21 @@ def test_weight_axis_limits_include_padding_around_rendered_line():
 
     assert low < 69.5
     assert high > 73
+
+
+def test_weight_chart_renders_date_labels_with_legend():
+    now = datetime(2026, 6, 11, 12)
+    df = weight_df(now, [2, 0])
+    date_labels = [
+        SimpleNamespace(label_date=now.date(), label='Start'),
+    ]
+
+    fig = create_weight_chart_figure([('Month', df)], date_labels)
+
+    try:
+        ax = fig.axes[0]
+        assert any(line.get_linestyle() == ':' for line in ax.get_lines())
+        legend_text = [text.get_text() for text in ax.get_legend().get_texts()]
+        assert legend_text == ['2026-06-11: Start']
+    finally:
+        close_weight_chart_figure(fig)

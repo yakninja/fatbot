@@ -1,8 +1,21 @@
 "Received: %{message}": "Received: %{message}"
+"Start the bot": "Start the bot"
+"Show help": "Show help"
+"Show today statistics": "Show today statistics"
+"Record weight": "Record weight"
+"Add chart date label": "Add chart date label"
+"Remove chart date label": "Remove chart date label"
+"Remove last entry": "Remove last entry"
+"Show settings": "Show settings"
 "/weight %{weight}": weight %{weight}
 "weight %{weight}": weight %{weight}
 "Weight recorded: %{weight}": "Weight recorded: %{weight}"
 "Weight recorded: %{weight} (%{delta}, %{per_day} per day)": "Weight recorded: %{weight} (%{delta}, %{per_day} per day)"
+"Weight chart labels:": "Weight chart labels:"
+"Date label saved: %{date} %{label}": "Date label saved: %{date} %{label}"
+"Date label removed: %{date} %{label}": "Date label removed: %{date} %{label}"
+"No date label found for %{date}": "No date label found for %{date}"
+"Date label must be %{count} characters or fewer": "Date label must be %{count} characters or fewer"
 "Command cancelled: %{command}": "Command cancelled: %{command}"
 "Time for your daily statistics!": Time for your daily statistics!
 "Yesterday you consumed:": "Yesterday you consumed:"

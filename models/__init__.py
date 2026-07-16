@@ -2,7 +2,7 @@ from datetime import datetime
 import time
 
 from pytz import timezone
-from sqlalchemy import MetaData, Date, ForeignKey, Boolean, Column, Integer, Float, String, DateTime
+from sqlalchemy import MetaData, Date, ForeignKey, Boolean, Column, Integer, Float, String, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base(metadata=MetaData())
@@ -64,6 +64,26 @@ class WeightLog(Base):
 
     def __repr__(self):
         return "<WeightLog(user_id={}, weight={})>".format(self.user_id, self.weight)
+
+
+class DateLabel(Base):
+    __tablename__ = 'date_label'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'label_date', name='idx-date_label-user_id-label_date'),
+    )
+
+    id = Column(Integer(), primary_key=True, unique=True, nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
+    created_at = Column(Integer(), default=time.time, nullable=False)
+    updated_at = Column(Integer(), default=time.time, nullable=False)
+    label_date = Column(Date(), nullable=False)
+    label = Column(String(32), nullable=False)
+
+    user = relationship('User', foreign_keys=user_id)
+
+    def __repr__(self):
+        return "<DateLabel(user_id={}, label_date={}, label={})>".format(
+            self.user_id, self.label_date, self.label)
 
 
 class CommandLog(Base):

@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import i18n
 from commands.router import router
-from commands import weight_entry_command, food_entry_command, today_command, cancel_command
+from commands import weight_entry_command, food_entry_command, today_command, cancel_command, date_label_command
 
 
 @contextmanager
@@ -30,6 +30,16 @@ def test_router(db_session, no_users):
             ('/today', today_command),
             (i18n.t('today'), today_command),
             (i18n.t('toDay'), today_command),
+
+            # chart labels
+            ('/label 2026-07-16 Vacation', date_label_command),
+            ('/date_label 2026-07-16 Vacation', date_label_command),
+            ('/add_label 2026-07-16 Vacation', date_label_command),
+            ('/add_date_label 2026-07-16 Vacation', date_label_command),
+            ('/unlabel 2026-07-16', date_label_command),
+            ('/remove_label 2026-07-16', date_label_command),
+            ('/remove_date_label 2026-07-16', date_label_command),
+            ('/delete_label 2026-07-16', date_label_command),
 
             # cancel
             ('/cancel', cancel_command),

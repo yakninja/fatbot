@@ -5,7 +5,7 @@ import i18n
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, \
     filters, ChatMemberHandler, ChatJoinRequestHandler, Application, JobQueue
 from telegram import ChatMember, ChatMemberUpdated, ForceReply, Update, Bot, User as TelegramUser, \
-    Message as TelegramMessage
+    Message as TelegramMessage, BotCommand
 from telegram.constants import ParseMode, ChatAction
 
 from dotenv import load_dotenv
@@ -27,6 +27,22 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 OWNER_TELEGRAM_ID = os.getenv('OWNER_TELEGRAM_ID')
 
 
+BOT_COMMANDS = [
+    BotCommand('start', i18n.t('Start the bot')),
+    BotCommand('help', i18n.t('Show help')),
+    BotCommand('today', i18n.t('Show today statistics')),
+    BotCommand('weight', i18n.t('Record weight')),
+    BotCommand('label', i18n.t('Add chart date label')),
+    BotCommand('unlabel', i18n.t('Remove chart date label')),
+    BotCommand('cancel', i18n.t('Remove last entry')),
+    BotCommand('settings', i18n.t('Show settings')),
+]
+
+
+async def register_bot_commands(application: Application) -> None:
+    await application.bot.set_my_commands(BOT_COMMANDS)
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Greet the user on /start"""
     await update.message.reply_text(i18n.t('Hi!'))
@@ -45,7 +61,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def main() -> None:
 
-    application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
+    application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).post_init(register_bot_commands).build()
 
     # commands
 
@@ -54,6 +70,16 @@ def main() -> None:
     application.add_handler(CommandHandler(["help"], help_command))
     application.add_handler(CommandHandler(["today"], today_command))
     application.add_handler(CommandHandler(["weight"], weight_entry_command))
+    application.add_handler(CommandHandler([
+        "label",
+        "date_label",
+        "add_label",
+        "add_date_label",
+        "unlabel",
+        "remove_label",
+        "remove_date_label",
+        "delete_label",
+    ], date_label_command))
     application.add_handler(CommandHandler(["cancel"], cancel_command))
 
     # admin commands

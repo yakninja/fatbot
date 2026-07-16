@@ -1,5 +1,13 @@
 "Received: %{message}": "Принял: %{message}"
 Hi!: Привет!
+"Start the bot": "Запустить бота"
+"Show help": "Помощь"
+"Show today statistics": "Статистика за сегодня"
+"Record weight": "Записать вес"
+"Add chart date label": "Добавить метку на график"
+"Remove chart date label": "Удалить метку с графика"
+"Remove last entry": "Удалить последнюю запись"
+"Show settings": "Настройки"
 I don't understand: "Не понимаю"
 The food was not found, forwarding request to the owner: Новый продукт будет определен и добавлен через некоторое время
 "Food recorded: %{name} %{qty} %{unit}": "Еда записана: %{name} %{qty} %{unit}"
@@ -34,6 +42,11 @@ cancel: отмена
 "Removing your last entry:": "Удаление последней записи:"
 "Recording weight:": "Запись веса:"
 "Recording food:": "Запись еды:"
+"Weight chart labels:": "Метки графика веса:"
+"Date label saved: %{date} %{label}": "Метка даты сохранена: %{date} %{label}"
+"Date label removed: %{date} %{label}": "Метка даты удалена: %{date} %{label}"
+"No date label found for %{date}": "Метка даты не найдена: %{date}"
+"Date label must be %{count} characters or fewer": "Метка даты должна быть не длиннее %{count} символов"
 day: день
 today: сегодня
 "Settings:": "Настройки:"
